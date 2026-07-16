@@ -1,0 +1,37 @@
+:root {
+  --surface-0: oklch(0.14 0.008 260);
+  --surface-1: oklch(0.18 0.008 260);
+  --surface-2: oklch(0.22 0.010 260);
+  --surface-3: oklch(0.28 0.010 260);
+  --text-primary: oklch(0.90 0.005 260);
+  --text-secondary: oklch(0.62 0.008 260);
+  --text-muted: oklch(0.45 0.008 260);
+  --accent: oklch(0.72 0.15 200);
+  --accent-hover: oklch(0.78 0.18 200);
+  --bull: oklch(0.65 0.20 145);       /* 漲 - 紅 (A股市場) */
+  --bear: oklch(0.60 0.22 25);        /* 跌 - 綠 (A股市場) */
+  --bull-text: oklch(0.82 0.15 145);
+  --bear-text: oklch(0.78 0.18 25);
+  --success: oklch(0.70 0.16 145);
+  --warning: oklch(0.75 0.15 85);
+  --error: oklch(0.62 0.22 25);
+  --info: oklch(0.72 0.12 240);
+  --font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-data: 1.5rem;
+  --font-title: 1.25rem;
+  --font-section: 1rem;
+  --font-body: 0.875rem;
+  --font-label: 0.75rem;
+  --font-micro: 0.625rem;
+  --line-height: 1.4;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --topbar-height: 48px;
+  --bottombar-height: 56px;
+  --sidebar-width: 200px;
+}
