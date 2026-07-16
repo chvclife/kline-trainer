@@ -1,11 +1,12 @@
 import { useRef, useId } from 'react';
+import { useChart } from '../../hooks/useChart';
 
 export default function KlineChart() {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartId = useId();
 
-  // chartId is reserved for future klinecharts integration
-  void chartId;
+  // Initialize chart with klinecharts, sync data and indicators
+  useChart({ containerRef, chartId });
 
   return (
     <div
