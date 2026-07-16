@@ -159,8 +159,8 @@ export const trainingApi = {
   },
 
   async getTrades(id: string): Promise<TradeRecord[]> {
-    const res = await api.get<TradeRecord[]>(`/trainings/${id}/trades`);
-    return res.data;
+    const res = await api.get<{ trades: TradeRecord[] }>(`/trainings/${id}/trades`);
+    return res.data.trades;
   },
 
   async addSnapshot(
