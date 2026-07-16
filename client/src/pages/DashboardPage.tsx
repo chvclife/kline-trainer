@@ -115,6 +115,14 @@ export default function DashboardPage() {
                     >
                       查看
                     </button>
+                    {r.status === "in_progress" && (
+                      <button
+                        className="dashboard-table__continue-btn"
+                        onClick={() => navigate(`/training/${r.id}`)}
+                      >
+                        繼續
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

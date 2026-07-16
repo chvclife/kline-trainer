@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import KlineChart from "../components/chart/KlineChart";
 import Button from "../components/common/Button";
 import Slider from "../components/common/Slider";
@@ -13,8 +13,10 @@ import PositionBar from "../components/training/PositionBar";
 import StockSelector from "../components/stock/StockSelector";
 import RandomStock from "../components/stock/RandomStock";
 import { useTraining } from "../hooks/useTraining";
+import { useTrade } from "../hooks/useTrade";
 import { useChart } from "../hooks/useChart";
 import { useTrainingStore } from "../store/trainingStore";
+import { useChartStore } from "../store/chartStore";
 import type { Period, StockItem } from "../types";
 
 type Phase = "setup" | "training" | "complete";
@@ -24,6 +26,7 @@ const DEFAULT_DATA_DAYS = 200;
 
 export default function TrainingPage() {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const [phase, setPhase] = useState<Phase>("setup");
 
   // Setup state
@@ -39,6 +42,7 @@ export default function TrainingPage() {
   // Training hooks
   const {
     startTraining,
+    resumeTraining,
     completeTraining,
     reset,
     isTraining,
@@ -56,6 +60,17 @@ export default function TrainingPage() {
     setActiveDrawingTool,
     clearDrawings,
   } = useChart();
+
+  // Resume training when route has an id param
+  useEffect(() => {
+    if (id) {
+      resumeTraining(id)
+        .then(() => setPhase("training"))
+        .catch(() => navigate("/dashboard"));
+    }
+    // Only run on mount or id change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   async function handleStart() {
     if (!selectedStock) return;

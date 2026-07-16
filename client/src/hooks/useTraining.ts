@@ -57,6 +57,55 @@ export function useTraining() {
     [setKlineData, setCurrentTraining],
   );
 
+  const resumeTraining = useCallback(
+    async (id: string) => {
+      // Fetch training record
+      const training = await trainingApi.get(id);
+      if (!training) throw new Error("Training record not found");
+
+      // Fetch K-line data using the stored parameters
+      const klineResp = await stockApi.getKline(
+        training.stock_code,
+        training.period,
+        training.start_date,
+        training.end_date,
+      );
+
+      // Set the data directly in the store with restored state
+      const store = useTrainingStore.getState();
+
+      // Find last snapshot to restore position/costPrice
+      let restoredPosition = 0;
+      let restoredCostPrice = 0;
+      let restoredTrades: import("../types").TradeRecord[] = [];
+
+      if (training.snapshots && training.snapshots.length > 0) {
+        const lastSnapshot = training.snapshots[training.snapshots.length - 1];
+        restoredPosition = lastSnapshot.position;
+        restoredCostPrice = lastSnapshot.cost_price;
+      }
+
+      if (training.trades && training.trades.length > 0) {
+        restoredTrades = training.trades;
+      }
+
+      useTrainingStore.setState({
+        allKlineData: klineResp.data,
+        dataLength: klineResp.data.length,
+        currentIndex: training.current_index,
+        position: restoredPosition,
+        costPrice: restoredCostPrice,
+        trades: restoredTrades,
+        isTraining: true,
+        currentTraining: training,
+      });
+
+      // Reset save counter so auto-save continues from here
+      saveCounter.current = 0;
+    },
+    [],
+  );
+
   const doStepForward = useCallback(async () => {
     const store = useTrainingStore.getState();
     if (store.currentIndex >= store.dataLength - 1) return;
@@ -129,6 +178,7 @@ export function useTraining() {
 
   return {
     startTraining,
+    resumeTraining,
     stepForward: doStepForward,
     startReplay,
     stopReplay,
