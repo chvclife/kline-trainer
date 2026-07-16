@@ -1,0 +1,45 @@
+.training-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  flex: 1;
+  max-width: 400px;
+}
+
+.training-panel__progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.training-panel__label {
+  font-size: var(--font-label);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  min-width: 60px;
+}
+
+.training-panel__bar {
+  flex: 1;
+  height: 6px;
+  background: var(--surface-3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.training-panel__bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.15s ease;
+}
+
+.training-panel__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.training-panel__speed {
+  width: 80px;
+}

@@ -1,0 +1,19 @@
+.trade-panel {
+  display: flex;
+  gap: var(--space-md);
+  align-items: flex-end;
+  flex: 1;
+  justify-content: center;
+}
+
+.trade-panel__side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  width: 160px;
+}
+
+.trade-panel__slider {
+  width: 100%;
+}

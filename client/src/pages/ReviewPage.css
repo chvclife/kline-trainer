@@ -1,0 +1,245 @@
+.review-page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.review-page__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 0 var(--space-xl);
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--surface-2);
+  height: var(--topbar-height);
+}
+
+.review-page__back {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: var(--font-body);
+  font-family: var(--font-family);
+  cursor: pointer;
+  padding: 0;
+}
+
+.review-page__back:hover {
+  color: var(--accent-hover);
+}
+
+.review-page__title {
+  font-size: var(--font-section);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.review-page__period {
+  font-size: var(--font-label);
+  color: var(--text-muted);
+  background: var(--surface-2);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.review-page__date {
+  font-size: var(--font-label);
+  color: var(--text-secondary);
+  margin-left: auto;
+}
+
+.review-page__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  height: 100%;
+  color: var(--text-secondary);
+}
+
+.review-page__body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.review-page__chart {
+  flex: 1;
+  position: relative;
+}
+
+.review-page__sidebar {
+  width: 320px;
+  overflow-y: auto;
+  background: var(--surface-1);
+  border-left: 1px solid var(--surface-2);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.review-page__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--surface-2);
+}
+
+/* Review cards */
+.review-card {
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: var(--space-md);
+}
+
+.review-card__title {
+  font-size: var(--font-label);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-sm);
+  font-weight: 600;
+}
+
+.review-card__big-num {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-md);
+  margin-bottom: var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+
+.review-card__big-num--up {
+  background: oklch(0.65 0.20 145 / 0.1);
+}
+
+.review-card__big-num--down {
+  background: oklch(0.60 0.22 25 / 0.1);
+}
+
+.review-card__big-num-label {
+  font-size: var(--font-micro);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.review-card__big-num-value {
+  font-size: var(--font-data);
+  font-weight: 700;
+}
+
+.review-card__big-num--up .review-card__big-num-value {
+  color: var(--bull);
+}
+
+.review-card__big-num--down .review-card__big-num-value {
+  color: var(--bear);
+}
+
+.review-card__stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.review-card__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-sm);
+  background: var(--surface-1);
+  border-radius: var(--radius-sm);
+}
+
+.review-card__stat-label {
+  font-size: var(--font-micro);
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.review-card__stat-value {
+  font-size: var(--font-section);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.review-card__benchmark {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--space-sm);
+  padding: var(--space-sm);
+  background: var(--surface-1);
+  border-radius: var(--radius-sm);
+}
+
+.review-card__empty {
+  font-size: var(--font-label);
+  color: var(--text-muted);
+  text-align: center;
+  padding: var(--space-md);
+}
+
+.review-card__trades {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.review-card__trade {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-label);
+}
+
+.review-card__trade--buy {
+  background: oklch(0.65 0.20 145 / 0.08);
+}
+
+.review-card__trade--sell {
+  background: oklch(0.60 0.22 25 / 0.08);
+}
+
+.review-card__trade-action {
+  font-weight: 600;
+  min-width: 36px;
+}
+
+.review-card__trade--buy .review-card__trade-action {
+  color: var(--bull);
+}
+
+.review-card__trade--sell .review-card__trade-action {
+  color: var(--bear);
+}
+
+.review-card__trade-info {
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.review-card__trade-position {
+  color: var(--text-secondary);
+}
+
+.review-card__trade-time {
+  color: var(--text-muted);
+  font-size: var(--font-micro);
+}
+
+.review-card__note {
+  font-size: var(--font-body);
+  color: var(--text-primary);
+  line-height: var(--line-height);
+}

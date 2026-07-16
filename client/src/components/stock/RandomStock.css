@@ -1,0 +1,22 @@
+.random-stock {
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-2);
+  border: 1px dashed var(--surface-3);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: var(--font-body);
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.random-stock:hover:not(:disabled) {
+  background: var(--surface-3);
+  border-color: var(--accent);
+}
+
+.random-stock:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

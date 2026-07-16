@@ -1,3 +1,127 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { trainingApi } from "../services/api";
+import Skeleton from "../components/common/Skeleton";
+import Button from "../components/common/Button";
+import type { TrainingRecord } from "../types";
+
+function fmtPct(v: number | null | undefined): string {
+  if (v == null) return "--";
+  const pct = v * 100;
+  return `${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%`;
+}
+
+function fmtDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("zh-TW", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  in_progress: "進行中",
+  completed: "已完成",
+};
+
 export default function DashboardPage() {
-  return <div>DashboardPage</div>;
+  const navigate = useNavigate();
+  const [records, setRecords] = useState<TrainingRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetch() {
+      try {
+        const data = await trainingApi.list(1, 50);
+        setRecords(data);
+      } catch {
+        // Could show error toast
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetch();
+  }, []);
+
+  return (
+    <div className="dashboard-layout">
+      <div className="dashboard-header">
+        <h1 className="dashboard-header__title">訓練列表</h1>
+        <Button variant="accent" onClick={() => navigate("/training")}>
+          新建訓練
+        </Button>
+      </div>
+
+      <div className="dashboard-content">
+        {loading ? (
+          <div className="dashboard-skeleton">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="dashboard-skeleton__row">
+                <Skeleton height={20} variant="text" width="120px" />
+                <Skeleton height={20} variant="text" width="80px" />
+                <Skeleton height={20} variant="text" width="60px" />
+                <Skeleton height={20} variant="text" width="100px" />
+              </div>
+            ))}
+          </div>
+        ) : records.length === 0 ? (
+          <div className="dashboard-empty">
+            <p className="dashboard-empty__text">尚無訓練記錄</p>
+            <Button variant="accent" onClick={() => navigate("/training")}>
+              開始第一次訓練
+            </Button>
+          </div>
+        ) : (
+          <table className="dashboard-table">
+            <thead>
+              <tr>
+                <th>股票</th>
+                <th>週期</th>
+                <th>收益</th>
+                <th>狀態</th>
+                <th>日期</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {records.map((r) => (
+                <tr key={r.id} className="dashboard-table__row">
+                  <td className="dashboard-table__stock">
+                    <span className="dashboard-table__code">{r.stock_code}</span>
+                    <span className="dashboard-table__name">{r.stock_name}</span>
+                  </td>
+                  <td>{r.period}</td>
+                  <td
+                    className={
+                      (r.total_return ?? 0) >= 0
+                        ? "dashboard-table__return--up"
+                        : "dashboard-table__return--down"
+                    }
+                  >
+                    {fmtPct(r.total_return)}
+                  </td>
+                  <td>
+                    <span
+                      className={`dashboard-table__status dashboard-table__status--${r.status}`}
+                    >
+                      {STATUS_LABELS[r.status] ?? r.status}
+                    </span>
+                  </td>
+                  <td className="dashboard-table__date">{fmtDate(r.created_at)}</td>
+                  <td>
+                    <button
+                      className="dashboard-table__review-btn"
+                      onClick={() => navigate(`/review/${r.id}`)}
+                    >
+                      查看
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
 }

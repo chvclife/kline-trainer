@@ -1,0 +1,113 @@
+.training-result {
+  padding: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.training-result__title {
+  font-size: var(--font-title);
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.training-result__return {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-lg);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+
+.training-result__return--profit {
+  border: 1px solid var(--bull);
+}
+
+.training-result__return--loss {
+  border: 1px solid var(--bear);
+}
+
+.training-result__return-label {
+  font-size: var(--font-label);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.training-result__return-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  font-family: var(--font-family);
+  margin-top: var(--space-xs);
+}
+
+.training-result__return--profit .training-result__return-value {
+  color: var(--bull);
+}
+
+.training-result__return--loss .training-result__return-value {
+  color: var(--bear);
+}
+
+.training-result__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+.training-result__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-md);
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+}
+
+.training-result__stat-label {
+  font-size: var(--font-micro);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-xs);
+}
+
+.training-result__stat-value {
+  font-size: var(--font-data);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.training-result__note {
+  padding: var(--space-md);
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--accent);
+}
+
+.training-result__note-label {
+  font-size: var(--font-label);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: var(--space-xs);
+}
+
+.training-result__note-text {
+  font-size: var(--font-body);
+  color: var(--text-primary);
+  line-height: var(--line-height);
+}
+
+.training-result__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.training-result__actions > button {
+  width: 100%;
+}

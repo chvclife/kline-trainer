@@ -1,0 +1,73 @@
+.drawing-tool {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+}
+
+.drawing-tool__label {
+  font-size: var(--font-label);
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.drawing-tool__group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.drawing-tool__btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: none;
+  border: 1px solid var(--surface-3);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: var(--font-body);
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  text-align: left;
+}
+
+.drawing-tool__btn:hover {
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+
+.drawing-tool__btn--active {
+  border-color: var(--accent);
+  background: oklch(0.72 0.15 200 / 0.15);
+  color: var(--accent);
+}
+
+.drawing-tool__icon {
+  font-size: 1.2rem;
+  width: 24px;
+  text-align: center;
+}
+
+.drawing-tool__name {
+  font-size: var(--font-label);
+}
+
+.drawing-tool__clear {
+  margin-top: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  background: none;
+  border: none;
+  color: var(--error);
+  font-size: var(--font-label);
+  font-family: var(--font-family);
+  cursor: pointer;
+  text-align: left;
+}
+
+.drawing-tool__clear:hover {
+  color: oklch(0.72 0.25 25);
+}
