@@ -84,7 +84,9 @@ export const authApi = {
 // Stock API
 export const stockApi = {
   async search(q: string): Promise<StockItem[]> {
-    const res = await api.get<StockItem[]>("/stocks/search", { params: { q } });
+    const res = await api.get<{ results: StockItem[] }>("/stocks/search", { params: { q } });
+    return res.data.results;
+  },
     return res.data;
   },
 
