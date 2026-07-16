@@ -14,6 +14,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from app.routers import auth  # noqa: E402
+
+app.include_router(auth.router)
+
 
 @app.get("/api/health")
 def health_check():

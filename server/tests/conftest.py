@@ -1,20 +1,34 @@
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from app.database import Base, get_db
 from app.main import app
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def db_session():
-    """Create a fresh SQLite in-memory database for each test."""
+    """Create a fresh SQLite in-memory database for each test.
+
+    Uses StaticPool so that the single in-memory connection is shared
+    across the session and all dependents — preventing tables from
+    disappearing after commit() on SQLite :memory:.
+    """
     engine = create_engine(
         "sqlite:///:memory:",
         connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
     )
-    Base.metadata.create_all(bind=engine)
+
+    # StaticPool + create_all has a quirk in some SQLAlchemy versions
+    # where the table-check query sees a stale pool connection.
+    # Work around it by creating tables inside a connection.
+    with engine.connect() as conn:
+        Base.metadata.create_all(bind=conn)
+        conn.commit()
+
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
     db = TestingSessionLocal()
@@ -22,7 +36,10 @@ def db_session():
         yield db
     finally:
         db.close()
-        Base.metadata.drop_all(bind=engine)
+        # Drop tables on the same connection to ensure they are cleaned up
+        with engine.connect() as conn:
+            Base.metadata.drop_all(bind=conn)
+            conn.commit()
 
 
 @pytest.fixture
