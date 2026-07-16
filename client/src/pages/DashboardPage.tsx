@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { trainingApi } from "../services/api";
+import { useAuthStore } from "../store/authStore";
 import Skeleton from "../components/common/Skeleton";
 import Button from "../components/common/Button";
 import type { TrainingRecord } from "../types";
@@ -26,6 +27,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const logout = useAuthStore((s) => s.logout);
   const [records, setRecords] = useState<TrainingRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,7 +35,7 @@ export default function DashboardPage() {
     async function fetch() {
       try {
         const data = await trainingApi.list(1, 50);
-        setRecords(data);
+        setRecords(data.items);
       } catch {
         // Could show error toast
       } finally {
@@ -47,9 +49,14 @@ export default function DashboardPage() {
     <div className="dashboard-layout">
       <div className="dashboard-header">
         <h1 className="dashboard-header__title">訓練列表</h1>
-        <Button variant="accent" onClick={() => navigate("/training")}>
-          新建訓練
-        </Button>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <Button variant="accent" onClick={() => navigate("/training")}>
+            新建訓練
+          </Button>
+          <Button variant="default" onClick={() => { logout(); navigate("/login"); }}>
+            登出
+          </Button>
+        </div>
       </div>
 
       <div className="dashboard-content">

@@ -108,8 +108,8 @@ export const stockApi = {
 
 // Training API
 export const trainingApi = {
-  async list(page: number = 1, size: number = 20): Promise<TrainingRecord[]> {
-    const res = await api.get<TrainingRecord[]>("/trainings", {
+  async list(page: number = 1, size: number = 20): Promise<{ items: TrainingRecord[]; total: number }> {
+    const res = await api.get<{ items: TrainingRecord[]; total: number }>("/trainings", {
       params: { page, size },
     });
     return res.data;
