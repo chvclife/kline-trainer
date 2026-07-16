@@ -1,0 +1,121 @@
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: var(--surface-0);
+}
+
+.login-page__card {
+  width: 100%;
+  max-width: 400px;
+  padding: var(--space-xl);
+}
+
+.login-page__app-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: var(--space-lg);
+  letter-spacing: 0.05em;
+}
+
+/* Auth form shared styles */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.auth-form__title {
+  font-size: var(--font-title);
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+  margin-bottom: var(--space-xs);
+}
+
+.auth-form__error {
+  background: oklch(0.62 0.22 25 / 0.15);
+  color: var(--error);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-body);
+  text-align: center;
+}
+
+.auth-form__label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  font-size: var(--font-label);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.auth-form__input {
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-1);
+  border: 1px solid var(--surface-3);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: var(--font-body);
+  font-family: var(--font-family);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.auth-form__input:focus {
+  border-color: var(--accent);
+}
+
+.auth-form__input::placeholder {
+  color: var(--text-muted);
+}
+
+.auth-form__button {
+  padding: var(--space-sm) var(--space-md);
+  background: var(--accent);
+  color: var(--surface-0);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-body);
+  font-weight: 600;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-top: var(--space-xs);
+}
+
+.auth-form__button:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.auth-form__button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-form__switch {
+  text-align: center;
+  font-size: var(--font-body);
+  color: var(--text-secondary);
+}
+
+.auth-form__link {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: var(--font-body);
+  font-family: var(--font-family);
+  cursor: pointer;
+  padding: 0;
+  margin-left: var(--space-xs);
+  text-decoration: underline;
+}
+
+.auth-form__link:hover {
+  color: var(--accent-hover);
+}

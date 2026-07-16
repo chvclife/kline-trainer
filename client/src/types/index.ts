@@ -19,6 +19,16 @@ export interface StockItem {
   name: string;
 }
 
+export interface AuthTokens {
+  access_token: string;
+  refresh_token: string;
+}
+
+export interface UserInfo {
+  id: string;
+  username: string;
+}
+
 export interface TradeRecord {
   id: string;
   training_id: string;
