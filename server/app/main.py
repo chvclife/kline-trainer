@@ -15,8 +15,12 @@ app.add_middleware(
 )
 
 from app.routers import auth  # noqa: E402
+from app.routers import stock  # noqa: E402
+from app.routers import training  # noqa: E402
 
 app.include_router(auth.router)
+app.include_router(stock.router)
+app.include_router(training.router)
 
 
 @app.get("/api/health")
