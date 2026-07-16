@@ -226,7 +226,7 @@ def _calc_total_return(snapshots: list[PositionSnapshot]) -> float | None:
     end_value = last.market_value + last.unrealized_pnl + (last.realized_pnl or 0.0)
     if start_value == 0:
         return 0.0
-    return round((end_value - start_value) / start_value * 100, 4)
+    return round((end_value - start_value) / start_value, 6)
 
 
 def _calc_win_rate(trades: list[Trade]) -> float | None:
@@ -248,7 +248,7 @@ def _calc_win_rate(trades: list[Trade]) -> float | None:
 
     if pairs == 0:
         return None
-    return round(wins / pairs * 100, 2)
+    return round(wins / pairs, 4)
 
 
 def _calc_max_drawdown(snapshots: list[PositionSnapshot]) -> float | None:
@@ -272,7 +272,7 @@ def _calc_max_drawdown(snapshots: list[PositionSnapshot]) -> float | None:
         if dd > max_dd:
             max_dd = dd
 
-    return round(max_dd * 100, 2)
+    return round(max_dd, 6)
 
 
 def _calc_sharpe_ratio(snapshots: list[PositionSnapshot]) -> float | None:
