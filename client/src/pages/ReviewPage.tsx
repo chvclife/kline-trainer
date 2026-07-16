@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { trainingApi } from "../services/api";
 import KlineChart from "../components/chart/KlineChart";
 import Skeleton from "../components/common/Skeleton";
+import "./ReviewPage.css";
 import Button from "../components/common/Button";
 import type { TrainingRecord, TradeRecord } from "../types";
 

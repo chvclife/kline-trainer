@@ -1,4 +1,5 @@
 import type { Period, IndicatorConfig } from "../../types";
+import "./ChartToolbar.css";
 
 interface ChartToolbarProps {
   period: Period;

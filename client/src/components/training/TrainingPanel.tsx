@@ -1,6 +1,7 @@
 import Button from "../common/Button";
 import Slider from "../common/Slider";
 import { useTraining } from "../../hooks/useTraining";
+import "./TrainingPanel.css";
 
 export default function TrainingPanel() {
   const {

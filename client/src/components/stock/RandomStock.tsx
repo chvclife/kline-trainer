@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { stockApi } from "../../services/api";
 import type { StockItem } from "../../types";
+import "./RandomStock.css";
 
 interface RandomStockProps {
   onSelect: (stock: StockItem) => void;

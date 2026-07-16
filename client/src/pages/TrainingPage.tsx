@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import KlineChart from "../components/chart/KlineChart";
 import Button from "../components/common/Button";
 import Slider from "../components/common/Slider";
+import "./TrainingPage.css";
 import ChartToolbar from "../components/chart/ChartToolbar";
 import SubChartSelector from "../components/chart/SubChartSelector";
 import DrawingTool from "../components/chart/DrawingTool";
@@ -38,6 +39,9 @@ export default function TrainingPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showSubChart, setShowSubChart] = useState(false);
   const [showDrawing, setShowDrawing] = useState(false);
+
+  const currentIndex = useTrainingStore((s) => s.currentIndex);
+  const dataLength = useTrainingStore((s) => s.dataLength);
 
   // Training hooks
   const {
@@ -214,7 +218,7 @@ export default function TrainingPage() {
         <span className="top-bar__period">{currentPeriod ?? period}</span>
         <div className="top-bar__spacer" />
         <span className="top-bar__index">
-          {useTrainingStore.getState().currentIndex + 1} / {useTrainingStore.getState().dataLength}
+          {currentIndex + 1} / {dataLength}
         </span>
         <PositionBar position={position} costPrice={costPrice} />
         <Button variant="default" size="sm" onClick={handleComplete}>

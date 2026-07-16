@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, type ChangeEvent } from "react";
 import { stockApi } from "../../services/api";
 import type { StockItem } from "../../types";
+import "./StockSelector.css";
 
 interface StockSelectorProps {
   onSelect: (stock: StockItem) => void;

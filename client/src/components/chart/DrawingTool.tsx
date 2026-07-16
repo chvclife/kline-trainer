@@ -1,4 +1,5 @@
 import type { Drawing } from "../../types";
+import "./DrawingTool.css";
 
 interface DrawingToolProps {
   activeTool: string | null;

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { INDICATOR_REGISTRY } from "../../indicators";
 import type { IndicatorConfig } from "../../types";
+import "./SubChartSelector.css";
 
 interface SubChartSelectorProps {
   activeIndicators: IndicatorConfig[];

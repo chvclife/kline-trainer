@@ -1,3 +1,5 @@
+import "./Skeleton.css";
+
 interface SkeletonProps {
   width?: string | number;
   height?: string | number;

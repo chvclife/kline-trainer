@@ -2,6 +2,7 @@ import Slider from "../common/Slider";
 import Button from "../common/Button";
 import { useTrade } from "../../hooks/useTrade";
 import { useTrainingStore } from "../../store/trainingStore";
+import "./TradePanel.css";
 
 export default function TradePanel() {
   const { doBuy, doSell, position } = useTrade();

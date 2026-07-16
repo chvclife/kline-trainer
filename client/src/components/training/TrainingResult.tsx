@@ -1,6 +1,7 @@
 import Modal from "../common/Modal";
 import Button from "../common/Button";
 import type { TrainingRecord } from "../../types";
+import "./TrainingResult.css";
 
 interface TrainingResultProps {
   isOpen: boolean;

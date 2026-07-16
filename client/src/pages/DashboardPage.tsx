@@ -5,6 +5,7 @@ import { useAuthStore } from "../store/authStore";
 import Skeleton from "../components/common/Skeleton";
 import Button from "../components/common/Button";
 import type { TrainingRecord } from "../types";
+import "./DashboardPage.css";
 
 function fmtPct(v: number | null | undefined): string {
   if (v == null) return "--";
