@@ -183,8 +183,20 @@ export const trainingApi = {
     return res.data;
   },
 
-  async complete(id: string): Promise<TrainingRecord> {
-    const res = await api.post<TrainingRecord>(`/trainings/${id}/complete`);
+  async complete(id: string): Promise<{
+    total_return: number | null;
+    win_rate: number | null;
+    max_drawdown: number | null;
+    sharpe_ratio: number | null;
+    profit_loss_ratio: number | null;
+  }> {
+    const res = await api.post<{
+      total_return: number | null;
+      win_rate: number | null;
+      max_drawdown: number | null;
+      sharpe_ratio: number | null;
+      profit_loss_ratio: number | null;
+    }>(`/trainings/${id}/complete`);
     return res.data;
   },
 };

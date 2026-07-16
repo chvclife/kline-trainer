@@ -27,6 +27,7 @@ export interface AuthTokens {
 export interface UserInfo {
   id: string;
   username: string;
+  created_at?: string;
 }
 
 export interface TradeRecord {

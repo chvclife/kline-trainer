@@ -172,7 +172,19 @@ export function useTraining() {
   const completeTraining = useCallback(async () => {
     if (currentTraining) {
       stopReplay();
-      await trainingApi.complete(currentTraining.id);
+      const metrics = await trainingApi.complete(currentTraining.id);
+      // Update the store with the completed training data
+      useTrainingStore.setState({
+        currentTraining: {
+          ...currentTraining,
+          status: "completed",
+          total_return: metrics.total_return ?? null,
+          win_rate: metrics.win_rate ?? null,
+          max_drawdown: metrics.max_drawdown ?? null,
+          sharpe_ratio: metrics.sharpe_ratio ?? null,
+          profit_loss_ratio: metrics.profit_loss_ratio ?? null,
+        },
+      });
     }
   }, [currentTraining, stopReplay]);
 
