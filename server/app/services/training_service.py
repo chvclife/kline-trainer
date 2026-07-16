@@ -1,4 +1,5 @@
 # server/app/services/training_service.py
+from collections import deque
 from datetime import datetime
 
 from fastapi import HTTPException
@@ -230,8 +231,8 @@ def _calc_total_return(snapshots: list[PositionSnapshot]) -> float | None:
 
 def _calc_win_rate(trades: list[Trade]) -> float | None:
     """Calculate win rate from paired buy-sell trades."""
-    # Match sells to the most recent unmatched buy
-    buys: list[Trade] = []
+    # Match sells to the earliest unmatched buy (FIFO)
+    buys: deque[Trade] = deque()
     wins = 0
     pairs = 0
 
@@ -240,7 +241,7 @@ def _calc_win_rate(trades: list[Trade]) -> float | None:
             buys.append(t)
         elif t.action == TradeAction.sell:
             if buys:
-                last_buy = buys.pop(0)
+                last_buy = buys.popleft()
                 if t.price > last_buy.price:
                     wins += 1
                 pairs += 1
@@ -303,7 +304,7 @@ def _calc_sharpe_ratio(snapshots: list[PositionSnapshot]) -> float | None:
 
 def _calc_profit_loss_ratio(trades: list[Trade]) -> float | None:
     """Calculate profit/loss ratio from paired trades."""
-    buys: list[Trade] = []
+    buys: deque[Trade] = deque()
     profits: list[float] = []
     losses: list[float] = []
 
@@ -312,7 +313,7 @@ def _calc_profit_loss_ratio(trades: list[Trade]) -> float | None:
             buys.append(t)
         elif t.action == TradeAction.sell:
             if buys:
-                last_buy = buys.pop(0)
+                last_buy = buys.popleft()
                 pnl = (t.price - last_buy.price) / last_buy.price
                 if pnl > 0:
                     profits.append(pnl)

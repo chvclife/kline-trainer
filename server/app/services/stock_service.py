@@ -2,7 +2,6 @@
 import random
 
 from app.data import data_manager
-from app.data.base import KlineBar
 
 POPULAR_STOCKS = [
     ("000001", "平安银行"), ("000002", "万科A"), ("000333", "美的集团"),

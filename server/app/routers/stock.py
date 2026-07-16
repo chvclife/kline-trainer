@@ -1,5 +1,5 @@
 # server/app/routers/stock.py
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.services.auth_service import get_current_user
 from app.services.stock_service import (
@@ -32,13 +32,11 @@ def kline(code: str, period: str = Query(default="1d", description="K-line perio
           current_user=Depends(get_current_user)):
     """Get K-line data for a stock."""
     if period not in VALID_PERIODS:
-        from fastapi import HTTPException
         raise HTTPException(
             status_code=422,
             detail=f"Invalid period '{period}'. Must be one of: {', '.join(sorted(VALID_PERIODS))}",
         )
 
-    from fastapi import HTTPException
     try:
         return get_kline(code, period, start, end)
     except RuntimeError as e:

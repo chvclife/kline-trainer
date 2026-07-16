@@ -1,10 +1,10 @@
 # server/app/routers/training.py
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.training import Training, TrainingStatus
+from app.models.training import Training
 from app.models.user import User
 from app.services.auth_service import get_current_user
 from app.services.training_service import (
