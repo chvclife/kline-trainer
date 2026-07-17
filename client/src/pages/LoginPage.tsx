@@ -1,10 +1,17 @@
 import { useState } from "react";
+import { Navigate } from "react-router-dom";
 import LoginForm from "../components/auth/LoginForm";
 import RegisterForm from "../components/auth/RegisterForm";
+import { useAuthStore } from "../store/authStore";
 import "./LoginPage.css";
 
 export default function LoginPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <div className="login-page">

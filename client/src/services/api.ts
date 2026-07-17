@@ -26,14 +26,15 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor: on 401, redirect to login
+// Response interceptor: on 401, clear tokens and reject (let components handle redirect)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem(ACCESS_TOKEN_KEY);
       localStorage.removeItem(REFRESH_TOKEN_KEY);
-      window.location.href = "/login";
+      // Don't use window.location.href here — it causes infinite reload loops.
+      // Components (ProtectedRoute, authStore) handle the redirect via React Router.
     }
     return Promise.reject(error);
   },

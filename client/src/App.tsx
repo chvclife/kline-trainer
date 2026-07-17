@@ -8,6 +8,24 @@ import { useEffect } from "react";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isInitializing = useAuthStore((s) => s.isInitializing);
+
+  if (isInitializing) {
+    return (
+      <div style={{
+        height: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "var(--surface-0)",
+        color: "var(--text-secondary)",
+        fontSize: "var(--font-body)",
+      }}>
+        載入中...
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }

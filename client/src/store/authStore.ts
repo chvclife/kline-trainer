@@ -5,6 +5,7 @@ import type { UserInfo } from "../types";
 interface AuthState {
   user: UserInfo | null;
   isAuthenticated: boolean;
+  isInitializing: boolean;
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, password: string) => Promise<void>;
   logout: () => void;
@@ -14,6 +15,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
+  isInitializing: true,
 
   login: async (username: string, password: string) => {
     const tokens = await authApi.login(username, password);
@@ -35,12 +37,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   checkAuth: async () => {
+    set({ isInitializing: true });
     try {
       const user = await authApi.me();
-      set({ user, isAuthenticated: true });
+      set({ user, isAuthenticated: true, isInitializing: false });
     } catch {
       clearTokens();
-      set({ user: null, isAuthenticated: false });
+      set({ user: null, isAuthenticated: false, isInitializing: false });
     }
   },
 }));
