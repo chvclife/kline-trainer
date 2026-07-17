@@ -107,8 +107,17 @@ export default function TrainingPage() {
     try {
       const stock = await stockApi.random();
       setSelectedStock(stock);
-    } catch (err) {
-      setStartError("隨機選股失敗，請稍後再試");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "隨機選股失敗";
+      // Check if it's an axios error with response data
+      const axiosErr = err as { response?: { status?: number; data?: { detail?: string } } };
+      if (axiosErr.response?.status === 401) {
+        setStartError("登入已過期，請重新登入");
+      } else if (axiosErr.response?.data?.detail) {
+        setStartError(axiosErr.response.data.detail);
+      } else {
+        setStartError(`隨機選股失敗：${msg}`);
+      }
       console.error("[TrainingPage] random failed:", err);
     } finally {
       setRandomLoading(false);

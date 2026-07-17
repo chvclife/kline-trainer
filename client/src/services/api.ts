@@ -33,8 +33,11 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem(ACCESS_TOKEN_KEY);
       localStorage.removeItem(REFRESH_TOKEN_KEY);
-      // Don't use window.location.href here — it causes infinite reload loops.
-      // Components (ProtectedRoute, authStore) handle the redirect via React Router.
+      // Update auth store to mark as unauthenticated
+      // This triggers ProtectedRoute to redirect to /login via React Router
+      import("../store/authStore").then(({ useAuthStore }) => {
+        useAuthStore.setState({ user: null, isAuthenticated: false, isInitializing: false });
+      });
     }
     return Promise.reject(error);
   },
