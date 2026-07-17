@@ -15,7 +15,6 @@ import StockSelector from "../components/stock/StockSelector";
 import RandomStock from "../components/stock/RandomStock";
 import { useTraining } from "../hooks/useTraining";
 import { useTrade } from "../hooks/useTrade";
-import { useChart } from "../hooks/useChart";
 import { useTrainingStore } from "../store/trainingStore";
 import { useChartStore } from "../store/chartStore";
 import type { Period, StockItem } from "../types";
@@ -56,14 +55,12 @@ export default function TrainingPage() {
     period: currentPeriod,
   } = useTraining();
 
-  const {
-    indicators,
-    activeDrawingTool,
-    addIndicator,
-    removeIndicator,
-    setActiveDrawingTool,
-    clearDrawings,
-  } = useChart();
+  const indicators = useChartStore((s) => s.indicators);
+  const activeDrawingTool = useChartStore((s) => s.activeDrawingTool);
+  const addIndicator = useChartStore((s) => s.addIndicator);
+  const removeIndicator = useChartStore((s) => s.removeIndicator);
+  const setActiveDrawingTool = useChartStore((s) => s.setActiveDrawingTool);
+  const clearDrawings = useChartStore((s) => s.clearDrawings);
 
   // Resume training when route has an id param
   useEffect(() => {
