@@ -87,8 +87,6 @@ export const stockApi = {
     const res = await api.get<{ results: StockItem[] }>("/stocks/search", { params: { q } });
     return res.data.results;
   },
-    return res.data;
-  },
 
   async random(): Promise<StockItem> {
     const res = await api.get<StockItem>("/stocks/random");
