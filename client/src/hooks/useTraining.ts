@@ -42,6 +42,10 @@ export function useTraining() {
       // Fetch K-line data
       const klineResp = await stockApi.getKline(code, period, start, end);
 
+      if (!klineResp.data || klineResp.data.length === 0) {
+        throw new Error(`無法獲取 ${code} 的K線數據，請換一隻股票或調整日期範圍`);
+      }
+
       // Create training record
       const training = await trainingApi.create({
         stock_code: code,

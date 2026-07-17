@@ -134,7 +134,7 @@ export const trainingApi = {
 
   async update(
     id: string,
-    data: Partial<TrainingRecord>,
+    data: Record<string, unknown>,
   ): Promise<TrainingRecord> {
     const res = await api.put<TrainingRecord>(`/trainings/${id}`, data);
     return res.data;

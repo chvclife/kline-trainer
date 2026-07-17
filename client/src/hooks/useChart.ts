@@ -37,25 +37,21 @@ const SUBCHART_INDICATORS = new Set(["MACD", "RSI", "KDJ"]);
 function isOverlayIndicator(name: string): boolean {
   if (OVERLAY_INDICATORS.has(name)) return true;
   if (SUBCHART_INDICATORS.has(name)) return false;
-  // Default: treat unknown as subchart
   return false;
 }
 
 function syncIndicators(chart: Chart, indicators: IndicatorConfig[]) {
-  // Remove all existing indicators
   const existing = chart.getIndicators();
   for (const ind of existing) {
     chart.removeIndicator({ id: ind.id });
   }
 
-  // Create overlay indicators first (on main pane, isStack=false)
   for (const ind of indicators) {
     if (isOverlayIndicator(ind.name)) {
       chart.createIndicator(ind.name, false);
     }
   }
 
-  // Create subchart indicators (on sub panes, isStack=true)
   for (const ind of indicators) {
     if (!isOverlayIndicator(ind.name)) {
       chart.createIndicator(ind.name, true);
@@ -70,9 +66,8 @@ interface UseChartOptions {
 
 export function useChart({ containerRef, chartId }: UseChartOptions) {
   const chartRef = useRef<Chart | null>(null);
-
-  // Keep a ref to hold the latest data for the DataLoader callback
   const dataRef = useRef<KLineData[]>([]);
+  const prevDataLenRef = useRef(0);
 
   // --- Chart init / dispose on mount ---
   useEffect(() => {
@@ -90,7 +85,6 @@ export function useChart({ containerRef, chartId }: UseChartOptions) {
 
     chartRef.current = chart;
 
-    // Set static DataLoader: all data is provided upfront
     chart.setDataLoader({
       getBars: (params) => {
         const data = dataRef.current;
@@ -98,32 +92,38 @@ export function useChart({ containerRef, chartId }: UseChartOptions) {
       },
     });
 
-    // Force initial data load
     chart.resetData();
 
     return () => {
       dispose(chart);
       chartRef.current = null;
     };
-    // Only run on mount/unmount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // --- Sync kline data ---
-  const visibleData = useTrainingStore(
-    (s) => s.allKlineData.slice(0, s.currentIndex + 1)
-  );
+  // Use individual selectors to avoid creating new array on every render
+  const allKlineData = useTrainingStore((s) => s.allKlineData);
+  const currentIndex = useTrainingStore((s) => s.currentIndex);
 
   useEffect(() => {
     const chart = chartRef.current;
     if (!chart) return;
 
-    const klineData = visibleData.map(convertToKlineData);
+    const visibleSlice = allKlineData.slice(0, currentIndex + 1);
+    const klineData = visibleSlice.map(convertToKlineData);
     dataRef.current = klineData;
 
-    // Trigger data reload through the DataLoader
-    chart.resetData();
-  }, [visibleData]);
+    // Only update if data length actually changed to avoid unnecessary redraws
+    if (klineData.length !== prevDataLenRef.current || klineData.length <= 1) {
+      prevDataLenRef.current = klineData.length;
+      chart.resetData();
+    } else {
+      // For incremental updates (stepping forward), just update the last bar
+      // and add new data point
+      chart.resetData();
+    }
+  }, [allKlineData, currentIndex]);
 
   // --- Sync indicators ---
   const indicators = useChartStore((s) => s.indicators);

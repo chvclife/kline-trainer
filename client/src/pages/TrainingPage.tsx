@@ -76,6 +76,8 @@ export default function TrainingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  const [startError, setStartError] = useState<string | null>(null);
+
   async function handleStart() {
     if (!selectedStock) return;
 
@@ -86,6 +88,7 @@ export default function TrainingPage() {
 
     const fmt = (d: Date) => d.toISOString().slice(0, 10);
 
+    setStartError(null);
     try {
       await startTraining(
         selectedStock.code,
@@ -94,8 +97,10 @@ export default function TrainingPage() {
         fmt(end),
       );
       setPhase("training");
-    } catch {
-      // Error handling could be added
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "啟動訓練失敗，請稍後再試";
+      setStartError(msg);
+      console.error("[TrainingPage] startTraining failed:", err);
     }
   }
 
@@ -174,6 +179,19 @@ export default function TrainingPage() {
               onChange={setDataDays}
             />
           </div>
+
+          {startError && (
+            <div style={{
+              background: "oklch(0.62 0.22 25 / 0.15)",
+              color: "var(--error)",
+              padding: "8px 16px",
+              borderRadius: "4px",
+              fontSize: "var(--font-body)",
+              textAlign: "center",
+            }}>
+              {startError}
+            </div>
+          )}
 
           <Button
             variant="accent"
