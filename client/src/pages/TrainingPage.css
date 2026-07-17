@@ -335,6 +335,29 @@
   text-align: center;
 }
 
+.setup-card__hint {
+  font-size: var(--font-micro);
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: var(--space-xs);
+}
+
+.setup-card__divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  color: var(--text-muted);
+  font-size: var(--font-micro);
+}
+
+.setup-card__divider::before,
+.setup-card__divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--surface-3);
+}
+
 .setup-card__periods {
   display: flex;
   gap: 4px;

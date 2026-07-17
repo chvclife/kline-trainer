@@ -19,7 +19,6 @@ import { stockApi } from "../services/api";
 import type { Period, StockItem } from "../types";
 
 type Phase = "setup" | "training" | "complete";
-type StockMode = "search" | "random";
 
 const DEFAULT_PERIOD: Period = "1d";
 const DEFAULT_DATA_DAYS = 200;
@@ -31,11 +30,10 @@ export default function TrainingPage() {
 
   // Setup state
   const [selectedStock, setSelectedStock] = useState<StockItem | null>(null);
-  const [stockMode, setStockMode] = useState<StockMode>("search");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<StockItem[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [randomLoading, setRandomLoading] = useState(false);
+  const [starting, setStarting] = useState(false);
   const [period, setPeriodState] = useState<Period>(DEFAULT_PERIOD);
   const [dataDays, setDataDays] = useState(DEFAULT_DATA_DAYS);
   const [startError, setStartError] = useState<string | null>(null);
@@ -48,7 +46,6 @@ export default function TrainingPage() {
   const currentIndex = useTrainingStore((s) => s.currentIndex);
   const dataLength = useTrainingStore((s) => s.dataLength);
 
-  // Training hooks
   const {
     startTraining,
     resumeTraining,
@@ -101,52 +98,49 @@ export default function TrainingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  async function handleRandomSelect() {
-    setRandomLoading(true);
+  async function handleStartWithStock(stock: StockItem) {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - dataDays);
+    const fmt = (d: Date) => d.toISOString().slice(0, 10);
+
+    setStarting(true);
+    setStartError(null);
+    try {
+      await startTraining(stock.code, period, fmt(start), fmt(end));
+      setPhase("training");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "啟動訓練失敗，請稍後再試";
+      setStartError(msg);
+      console.error("[TrainingPage] startTraining failed:", err);
+    } finally {
+      setStarting(false);
+    }
+  }
+
+  async function handleRandomStart() {
+    setStarting(true);
     setStartError(null);
     try {
       const stock = await stockApi.random();
-      setSelectedStock(stock);
+      await handleStartWithStock(stock);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "隨機選股失敗";
-      // Check if it's an axios error with response data
       const axiosErr = err as { response?: { status?: number; data?: { detail?: string } } };
       if (axiosErr.response?.status === 401) {
         setStartError("登入已過期，請重新登入");
       } else if (axiosErr.response?.data?.detail) {
         setStartError(axiosErr.response.data.detail);
       } else {
-        setStartError(`隨機選股失敗：${msg}`);
+        setStartError("隨機選股失敗，請稍後再試");
       }
-      console.error("[TrainingPage] random failed:", err);
-    } finally {
-      setRandomLoading(false);
+      console.error("[TrainingPage] random start failed:", err);
+      setStarting(false);
     }
   }
 
-  async function handleStart() {
+  async function handleSearchStart() {
     if (!selectedStock) return;
-
-    const end = new Date();
-    const start = new Date();
-    start.setDate(start.getDate() - dataDays);
-
-    const fmt = (d: Date) => d.toISOString().slice(0, 10);
-
-    setStartError(null);
-    try {
-      await startTraining(
-        selectedStock.code,
-        period,
-        fmt(start),
-        fmt(end),
-      );
-      setPhase("training");
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "啟動訓練失敗，請稍後再試";
-      setStartError(msg);
-      console.error("[TrainingPage] startTraining failed:", err);
-    }
+    await handleStartWithStock(selectedStock);
   }
 
   async function handleComplete() {
@@ -181,92 +175,9 @@ export default function TrainingPage() {
       <div className="setup-layout">
         <div className="setup-card">
           <h1 className="setup-card__title">K線訓練</h1>
-          <p className="setup-card__subtitle">選擇股票，開始訓練你的交易技巧</p>
+          <p className="setup-card__subtitle">選擇方式，開始訓練你的交易技巧</p>
 
-          <div className="setup-card__section">
-            <label className="setup-card__label">股票選擇</label>
-
-            {/* Mode tabs */}
-            <div className="setup-card__mode-tabs">
-              <button
-                className={`setup-card__mode-tab${stockMode === "search" ? " setup-card__mode-tab--active" : ""}`}
-                onClick={() => setStockMode("search")}
-              >
-                🔍 搜尋
-              </button>
-              <button
-                className={`setup-card__mode-tab${stockMode === "random" ? " setup-card__mode-tab--active" : ""}`}
-                onClick={() => setStockMode("random")}
-              >
-                🎲 隨機
-              </button>
-            </div>
-
-            {/* Search mode */}
-            {stockMode === "search" && (
-              <div className="setup-card__search">
-                <input
-                  className="setup-card__search-input"
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    debounceRef(e.target.value);
-                  }}
-                  placeholder="輸入股票代碼或名稱..."
-                />
-                {searchLoading && <span className="setup-card__search-spinner" />}
-                {searchResults.length > 0 && (
-                  <div className="setup-card__search-results">
-                    {searchResults.slice(0, 10).map((stock) => (
-                      <button
-                        key={stock.code}
-                        className={`setup-card__search-option${selectedStock?.code === stock.code ? " setup-card__search-option--selected" : ""}`}
-                        onClick={() => {
-                          setSelectedStock(stock);
-                          setSearchQuery(`${stock.code} ${stock.name}`);
-                          setSearchResults([]);
-                        }}
-                      >
-                        <span className="setup-card__search-code">{stock.code}</span>
-                        <span className="setup-card__search-name">{stock.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Random mode */}
-            {stockMode === "random" && (
-              <div className="setup-card__random-area">
-                <Button
-                  variant="accent"
-                  onClick={handleRandomSelect}
-                  disabled={randomLoading}
-                >
-                  {randomLoading ? "載入中..." : "🎲 隨機選一隻股票"}
-                </Button>
-              </div>
-            )}
-
-            {/* Selected stock display */}
-            {selectedStock && (
-              <div className="setup-card__selected">
-                已選擇：<strong>{selectedStock.code}</strong> {selectedStock.name}
-                <button
-                  className="setup-card__selected-clear"
-                  onClick={() => {
-                    setSelectedStock(null);
-                    setSearchQuery("");
-                  }}
-                >
-                  ✕
-                </button>
-              </div>
-            )}
-          </div>
-
+          {/* Period selector */}
           <div className="setup-card__section">
             <label className="setup-card__label">K線週期</label>
             <div className="setup-card__periods">
@@ -282,6 +193,7 @@ export default function TrainingPage() {
             </div>
           </div>
 
+          {/* Data length */}
           <div className="setup-card__section">
             <label className="setup-card__label">數據長度（天）</label>
             <Slider
@@ -293,26 +205,99 @@ export default function TrainingPage() {
             />
           </div>
 
+          {/* Random start - blind training */}
+          <div className="setup-card__section">
+            <Button
+              variant="accent"
+              size="lg"
+              onClick={handleRandomStart}
+              disabled={starting}
+              style={{ width: "100%" }}
+            >
+              {starting ? "載入中..." : "🎲 隨機訓練"}
+            </Button>
+            <p className="setup-card__hint">隨機選股，訓練結束後揭曉股票</p>
+          </div>
+
+          {/* Divider */}
+          <div className="setup-card__divider">
+            <span>或自行選股</span>
+          </div>
+
+          {/* Search and pick */}
+          <div className="setup-card__section">
+            <div className="setup-card__search">
+              <input
+                className="setup-card__search-input"
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  debounceRef(e.target.value);
+                }}
+                placeholder="搜尋股票代碼或名稱..."
+              />
+              {searchLoading && <span className="setup-card__search-spinner" />}
+              {searchResults.length > 0 && (
+                <div className="setup-card__search-results">
+                  {searchResults.slice(0, 10).map((stock) => (
+                    <button
+                      key={stock.code}
+                      className={`setup-card__search-option${selectedStock?.code === stock.code ? " setup-card__search-option--selected" : ""}`}
+                      onClick={() => {
+                        setSelectedStock(stock);
+                        setSearchQuery(`${stock.code} ${stock.name}`);
+                        setSearchResults([]);
+                      }}
+                    >
+                      <span className="setup-card__search-code">{stock.code}</span>
+                      <span className="setup-card__search-name">{stock.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {selectedStock && (
+              <div className="setup-card__selected">
+                已選擇：<strong>{selectedStock.code}</strong> {selectedStock.name}
+                <button
+                  className="setup-card__selected-clear"
+                  onClick={() => {
+                    setSelectedStock(null);
+                    setSearchQuery("");
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
+            <Button
+              variant="default"
+              size="lg"
+              disabled={!selectedStock || starting}
+              onClick={handleSearchStart}
+              style={{ width: "100%", marginTop: "8px" }}
+            >
+              {starting ? "載入中..." : "開始訓練"}
+            </Button>
+          </div>
+
           {startError && (
             <div className="setup-card__error">
               {startError}
             </div>
           )}
-
-          <Button
-            variant="accent"
-            size="lg"
-            disabled={!selectedStock}
-            onClick={handleStart}
-          >
-            開始訓練
-          </Button>
         </div>
       </div>
     );
   }
 
   // ---- Training Phase ----
+  // Hide stock name/code during training (blind training)
+  const blindMode = !currentTraining?.stock_name;
+
   const sidebarContent = showDrawing ? (
     <DrawingTool
       activeTool={activeDrawingTool}
@@ -337,7 +322,7 @@ export default function TrainingPage() {
           {sidebarOpen ? "◀" : "▶"}
         </button>
         <span className="top-bar__stock">
-          {currentTraining?.stock_name ?? "--"} ({currentTraining?.stock_code ?? "--"})
+          {blindMode ? "????" : currentTraining?.stock_name ?? "--"} ({blindMode ? "????" : currentTraining?.stock_code ?? "--"})
         </span>
         <span className="top-bar__period">{currentPeriod ?? period}</span>
         <div className="top-bar__spacer" />
@@ -387,7 +372,7 @@ export default function TrainingPage() {
         />
       )}
 
-      {/* Complete Modal */}
+      {/* Complete Modal - reveals the stock */}
       {phase === "complete" && currentTraining && (
         <TrainingResult
           isOpen={true}

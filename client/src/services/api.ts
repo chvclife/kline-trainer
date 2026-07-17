@@ -14,7 +14,7 @@ const REFRESH_TOKEN_KEY = "refresh_token";
 
 const api = axios.create({
   baseURL: "/api",
-  timeout: 30000,
+  timeout: 60000,
 });
 
 // Request interceptor: inject access token
