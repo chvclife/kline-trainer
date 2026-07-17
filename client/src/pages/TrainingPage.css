@@ -174,6 +174,165 @@
   padding: var(--space-sm);
   background: oklch(0.72 0.15 200 / 0.1);
   border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.setup-card__selected strong {
+  color: var(--text-primary);
+}
+
+.setup-card__selected-clear {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: var(--font-body);
+  cursor: pointer;
+  padding: 0 4px;
+  margin-left: auto;
+}
+
+.setup-card__selected-clear:hover {
+  color: var(--error);
+}
+
+.setup-card__mode-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--surface-2);
+  padding: 3px;
+  border-radius: var(--radius-sm);
+}
+
+.setup-card__mode-tab {
+  flex: 1;
+  padding: var(--space-xs) var(--space-sm);
+  background: transparent;
+  border: none;
+  border-radius: 3px;
+  color: var(--text-secondary);
+  font-size: var(--font-label);
+  font-family: var(--font-family);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.setup-card__mode-tab:hover {
+  color: var(--text-primary);
+}
+
+.setup-card__mode-tab--active {
+  background: var(--surface-0);
+  color: var(--accent);
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.2);
+}
+
+.setup-card__search {
+  position: relative;
+}
+
+.setup-card__search-input {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-1);
+  border: 1px solid var(--surface-3);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: var(--font-body);
+  font-family: var(--font-family);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.setup-card__search-input:focus {
+  border-color: var(--accent);
+}
+
+.setup-card__search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.setup-card__search-spinner {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--surface-3);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: translateY(-50%) rotate(360deg); }
+}
+
+.setup-card__search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--surface-1);
+  border: 1px solid var(--surface-3);
+  border-radius: var(--radius-sm);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
+  margin-top: 4px;
+}
+
+.setup-card__search-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: var(--font-body);
+  font-family: var(--font-family);
+  cursor: pointer;
+  text-align: left;
+}
+
+.setup-card__search-option:hover {
+  background: var(--surface-2);
+}
+
+.setup-card__search-option--selected {
+  background: oklch(0.72 0.15 200 / 0.1);
+  color: var(--accent);
+}
+
+.setup-card__search-code {
+  font-weight: 600;
+  color: var(--accent);
+  min-width: 70px;
+}
+
+.setup-card__search-name {
+  color: var(--text-secondary);
+}
+
+.setup-card__random-area {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-md) 0;
+}
+
+.setup-card__error {
+  background: oklch(0.62 0.22 25 / 0.15);
+  color: var(--error);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-body);
+  text-align: center;
 }
 
 .setup-card__periods {
