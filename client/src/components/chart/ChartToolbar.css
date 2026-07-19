@@ -49,7 +49,97 @@
   color: #fff;
 }
 
-.chart-toolbar__btn--more {
+.chart-toolbar__btn--add {
   color: var(--accent);
   font-weight: 600;
+}
+
+/* Indicator tags */
+.chart-toolbar__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: oklch(0.72 0.15 200 / 0.12);
+  border: 1px solid oklch(0.72 0.15 200 / 0.25);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+  font-size: 11px;
+  font-family: var(--font-family);
+  color: var(--accent);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.chart-toolbar__tag:hover {
+  background: oklch(0.72 0.15 200 / 0.2);
+}
+
+.chart-toolbar__tag-x {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.chart-toolbar__tag:hover .chart-toolbar__tag-x {
+  color: var(--error);
+}
+
+/* Add indicator dropdown */
+.chart-toolbar__add-wrap {
+  position: relative;
+}
+
+.chart-toolbar__dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: var(--surface-1);
+  border: 1px solid var(--surface-3);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 16px oklch(0 0 0 / 0.3);
+  min-width: 200px;
+  z-index: 50;
+  overflow: hidden;
+}
+
+.chart-toolbar__dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: var(--font-body);
+  font-family: var(--font-family);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+}
+
+.chart-toolbar__dropdown-item:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.chart-toolbar__dropdown-item--active,
+.chart-toolbar__dropdown-item:disabled {
+  color: var(--text-muted);
+  cursor: default;
+  background: var(--surface-2);
+}
+
+.chart-toolbar__dropdown-name {
+  font-weight: 600;
+}
+
+.chart-toolbar__dropdown-type {
+  font-size: var(--font-micro);
+  color: var(--text-muted);
+  background: var(--surface-3);
+  padding: 0 5px;
+  border-radius: 3px;
 }

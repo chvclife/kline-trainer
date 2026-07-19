@@ -28,6 +28,7 @@ export function useTraining() {
       period: string,
       start: string,
       end: string,
+      trainBars: number,
     ) => {
       // Fetch stock name from search or random
       let name = code;
@@ -55,7 +56,8 @@ export function useTraining() {
         end_date: end,
       });
 
-      setKlineData(klineResp.data);
+      // Use the trainBars parameter for initial reveal index
+      setKlineData(klineResp.data, trainBars);
       setCurrentTraining(training);
     },
     [setKlineData, setCurrentTraining],

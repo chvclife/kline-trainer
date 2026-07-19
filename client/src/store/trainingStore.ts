@@ -16,7 +16,8 @@ interface TrainingState {
   sellPercentage: number;
 
   visibleData: () => KlineBar[];
-  setKlineData: (data: KlineBar[]) => void;
+  setKlineData: (data: KlineBar[], trainBars?: number) => void;
+  prependKlineData: (data: KlineBar[]) => void;
   stepForward: () => void;
   buy: (percentage: number) => void;
   sell: (percentage: number) => void;
@@ -51,15 +52,30 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
     return allKlineData.slice(0, currentIndex + 1);
   },
 
-  setKlineData: (data: KlineBar[]) => {
+  setKlineData: (data: KlineBar[], trainBars?: number) => {
+    // trainBars = how many bars the user will step through (hidden at start)
+    // Default: last 50 bars for training
+    const tail = trainBars ?? Math.min(50, Math.floor(data.length * 0.15));
+    const initialIndex = Math.max(0, data.length - 1 - tail);
     set({
       allKlineData: data,
       dataLength: data.length,
-      currentIndex: 0,
+      currentIndex: initialIndex,
       position: 0,
       costPrice: 0,
       trades: [],
       isTraining: true,
+    });
+  },
+
+  prependKlineData: (data: KlineBar[]) => {
+    const { allKlineData, currentIndex } = get();
+    if (data.length === 0) return;
+    // Prepend earlier bars, shift currentIndex forward
+    set({
+      allKlineData: [...data, ...allKlineData],
+      dataLength: allKlineData.length + data.length,
+      currentIndex: currentIndex + data.length,
     });
   },
 

@@ -2,9 +2,7 @@ import { create } from "zustand";
 import type { IndicatorConfig, Drawing } from "../types";
 
 const DEFAULT_INDICATORS: IndicatorConfig[] = [
-  { name: "MA", type: "overlay", params: { period: 5 } },
-  { name: "MA", type: "overlay", params: { period: 10 } },
-  { name: "MA", type: "overlay", params: { period: 20 } },
+  { name: "MA", type: "overlay", params: { p1: 5, p2: 10, p3: 20, p4: 60 } },
 ];
 
 interface ChartState {
@@ -15,6 +13,7 @@ interface ChartState {
 
   addIndicator: (indicator: IndicatorConfig) => void;
   removeIndicator: (index: number) => void;
+  updateIndicator: (index: number, indicator: IndicatorConfig) => void;
   setSubChartCount: (count: number) => void;
   setActiveDrawingTool: (tool: string | null) => void;
   addDrawing: (drawing: Drawing) => void;
@@ -34,6 +33,11 @@ export const useChartStore = create<ChartState>((set) => ({
   removeIndicator: (index: number) =>
     set((state) => ({
       indicators: state.indicators.filter((_, i) => i !== index),
+    })),
+
+  updateIndicator: (index: number, indicator: IndicatorConfig) =>
+    set((state) => ({
+      indicators: state.indicators.map((ind, i) => (i === index ? indicator : ind)),
     })),
 
   setSubChartCount: (count: number) => set({ subChartCount: count }),

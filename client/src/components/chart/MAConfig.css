@@ -1,0 +1,105 @@
+.ma-config__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 80px;
+}
+
+.ma-config__panel {
+  background: var(--surface-1);
+  border: 1px solid var(--surface-3);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 32px oklch(0 0 0 / 0.4);
+  width: 360px;
+  overflow: hidden;
+}
+
+.ma-config__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-2);
+  font-size: var(--font-body);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ma-config__close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.ma-config__close:hover { color: var(--error); }
+
+.ma-config__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+}
+
+.ma-config__field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.ma-config__label {
+  font-size: var(--font-label);
+  color: var(--text-muted);
+  min-width: 32px;
+}
+
+.ma-config__input {
+  flex: 1;
+  padding: 4px 8px;
+  background: var(--surface-0);
+  border: 1px solid var(--surface-3);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: var(--font-body);
+  font-family: var(--font-family);
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.ma-config__input:focus { border-color: var(--accent); }
+
+.ma-config__input::placeholder { color: var(--text-muted); }
+
+.ma-config__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) var(--space-md);
+  border-top: 1px solid var(--surface-3);
+}
+
+.ma-config__hint {
+  font-size: var(--font-micro);
+  color: var(--text-muted);
+}
+
+.ma-config__apply {
+  padding: 4px 16px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-size: var(--font-label);
+  font-family: var(--font-family);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ma-config__apply:hover { opacity: 0.9; }

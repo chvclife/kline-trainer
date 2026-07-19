@@ -13,21 +13,6 @@
   gap: var(--space-md);
 }
 
-.top-bar__toggle {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: var(--font-body);
-  cursor: pointer;
-  padding: 4px;
-  border-radius: var(--radius-sm);
-}
-
-.top-bar__toggle:hover {
-  background: var(--surface-3);
-  color: var(--text-primary);
-}
-
 .top-bar__stock {
   font-size: var(--font-body);
   font-weight: 600;
@@ -57,11 +42,53 @@
   overflow: hidden;
 }
 
+/* Sidebar: always shows icon strip, panel slides in/out */
 .sidebar {
-  width: var(--sidebar-width);
+  display: flex;
   background: var(--surface-1);
-  overflow-y: auto;
   border-right: 1px solid var(--surface-2);
+}
+
+.sidebar__icons {
+  width: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-xs) 0;
+  gap: 2px;
+  border-right: 1px solid var(--surface-2);
+  flex-shrink: 0;
+}
+
+.sidebar__icon-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.15s;
+}
+
+.sidebar__icon-btn:hover {
+  background: var(--surface-3);
+}
+
+.sidebar__icon-btn--active {
+  background: var(--surface-2);
+}
+
+.sidebar__icons-spacer {
+  flex: 1;
+}
+
+.sidebar__panel {
+  width: var(--sidebar-width);
+  overflow-y: auto;
 }
 
 .chart-area {
@@ -73,6 +100,8 @@
 .chart-area__canvas {
   flex: 1;
   position: relative;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .bottom-bar {
@@ -89,27 +118,6 @@
   width: 1px;
   height: 32px;
   background: var(--surface-3);
-}
-
-/* Sidebar placeholder */
-.sidebar-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  padding: var(--space-md);
-}
-
-.sidebar-placeholder__text {
-  font-size: var(--font-label);
-  color: var(--text-muted);
-}
-
-.sidebar-placeholder__hint {
-  font-size: var(--font-micro);
-  color: var(--text-muted);
-  margin-top: var(--space-xs);
 }
 
 /* Setup layout */

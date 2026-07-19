@@ -18,6 +18,13 @@
   overflow: hidden;
 }
 
+/* Inline mode: no fixed width, fills sidebar */
+.subchart-selector__panel--inline {
+  width: 100%;
+  max-height: none;
+  border-radius: 0;
+}
+
 .subchart-selector__header {
   display: flex;
   align-items: center;

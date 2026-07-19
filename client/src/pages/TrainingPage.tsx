@@ -5,14 +5,13 @@ import Button from "../components/common/Button";
 import Slider from "../components/common/Slider";
 import "./TrainingPage.css";
 import ChartToolbar from "../components/chart/ChartToolbar";
-import SubChartSelector from "../components/chart/SubChartSelector";
 import DrawingTool from "../components/chart/DrawingTool";
 import TradePanel from "../components/training/TradePanel";
 import TrainingPanel from "../components/training/TrainingPanel";
 import TrainingResult from "../components/training/TrainingResult";
 import PositionBar from "../components/training/PositionBar";
 import { useTraining } from "../hooks/useTraining";
-import { useTrade } from "../hooks/useTrade";
+
 import { useTrainingStore } from "../store/trainingStore";
 import { useChartStore } from "../store/chartStore";
 import { stockApi } from "../services/api";
@@ -21,7 +20,8 @@ import type { Period, StockItem } from "../types";
 type Phase = "setup" | "training" | "complete";
 
 const DEFAULT_PERIOD: Period = "1d";
-const DEFAULT_DATA_DAYS = 200;
+const FETCH_DATA_DAYS = 500;   // Always load ~2 years of data, independent of training length
+const DEFAULT_TRAIN_BARS = 50; // Default: trade through the last 50 bars
 
 export default function TrainingPage() {
   const navigate = useNavigate();
@@ -35,13 +35,11 @@ export default function TrainingPage() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [starting, setStarting] = useState(false);
   const [period, setPeriodState] = useState<Period>(DEFAULT_PERIOD);
-  const [dataDays, setDataDays] = useState(DEFAULT_DATA_DAYS);
+  const [trainBars, setTrainBars] = useState(DEFAULT_TRAIN_BARS);
   const [startError, setStartError] = useState<string | null>(null);
 
-  // Sidebar state
+  // Sidebar state (drawing tools only; indicators via ChartToolbar dropdown)
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [showSubChart, setShowSubChart] = useState(false);
-  const [showDrawing, setShowDrawing] = useState(false);
 
   const currentIndex = useTrainingStore((s) => s.currentIndex);
   const dataLength = useTrainingStore((s) => s.dataLength);
@@ -62,8 +60,19 @@ export default function TrainingPage() {
   const activeDrawingTool = useChartStore((s) => s.activeDrawingTool);
   const addIndicator = useChartStore((s) => s.addIndicator);
   const removeIndicator = useChartStore((s) => s.removeIndicator);
+  const updateIndicator = useChartStore((s) => s.updateIndicator);
   const setActiveDrawingTool = useChartStore((s) => s.setActiveDrawingTool);
   const clearDrawings = useChartStore((s) => s.clearDrawings);
+
+  // Extract MA params for canvas overlay
+  const maIndicator = indicators.find((ind) => ind.name === "MA");
+  const maParams: number[] = [];
+  if (maIndicator) {
+    for (let i = 1; i <= 10; i++) {
+      const v = maIndicator.params[`p${i}`];
+      if (v != null && v > 0) maParams.push(v);
+    }
+  }
 
   // Debounced search
   const debounceRef = useCallback(() => {
@@ -99,18 +108,21 @@ export default function TrainingPage() {
   }, [id]);
 
   async function handleStartWithStock(stock: StockItem) {
+    // Always fetch FETCH_DATA_DAYS of data regardless of training length
     const end = new Date();
     const start = new Date();
-    start.setDate(start.getDate() - dataDays);
+    start.setDate(start.getDate() - FETCH_DATA_DAYS);
     const fmt = (d: Date) => d.toISOString().slice(0, 10);
 
     setStarting(true);
     setStartError(null);
     try {
-      await startTraining(stock.code, period, fmt(start), fmt(end));
+      await startTraining(stock.code, period, fmt(start), fmt(end), trainBars);
       setPhase("training");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "啟動訓練失敗，請稍後再試";
+      const axiosErr = err as { response?: { status?: number; data?: { detail?: string } } };
+      const msg = axiosErr.response?.data?.detail
+        ?? (err instanceof Error ? err.message : "啟動訓練失敗，請稍後再試");
       setStartError(msg);
       console.error("[TrainingPage] startTraining failed:", err);
     } finally {
@@ -121,21 +133,31 @@ export default function TrainingPage() {
   async function handleRandomStart() {
     setStarting(true);
     setStartError(null);
-    try {
-      const stock = await stockApi.random();
-      await handleStartWithStock(stock);
-    } catch (err: unknown) {
-      const axiosErr = err as { response?: { status?: number; data?: { detail?: string } } };
-      if (axiosErr.response?.status === 401) {
-        setStartError("登入已過期，請重新登入");
-      } else if (axiosErr.response?.data?.detail) {
-        setStartError(axiosErr.response.data.detail);
-      } else {
-        setStartError("隨機選股失敗，請稍後再試");
+
+    const MAX_RETRIES = 3;
+    let lastError: string | null = null;
+
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        const stock = await stockApi.random();
+        await handleStartWithStock(stock);
+        return; // Success — exit function
+      } catch (err: unknown) {
+        const axiosErr = err as { response?: { status?: number; data?: { detail?: string } } };
+        if (axiosErr.response?.status === 401) {
+          setStartError("登入已過期，請重新登入");
+          setStarting(false);
+          return;
+        }
+        lastError = axiosErr.response?.data?.detail
+          ?? (err instanceof Error ? err.message : "隨機選股失敗");
+        console.error(`[TrainingPage] random attempt ${attempt + 1} failed:`, lastError);
       }
-      console.error("[TrainingPage] random start failed:", err);
-      setStarting(false);
     }
+
+    // All retries exhausted
+    setStartError(`隨機訓練失敗（已嘗試 ${MAX_RETRIES} 隻股票）：${lastError}。請檢查網絡或更換週期後再試。`);
+    setStarting(false);
   }
 
   async function handleSearchStart() {
@@ -193,15 +215,15 @@ export default function TrainingPage() {
             </div>
           </div>
 
-          {/* Data length */}
+          {/* Training length */}
           <div className="setup-card__section">
-            <label className="setup-card__label">數據長度（天）</label>
+            <label className="setup-card__label">訓練長度（根 K 線）</label>
             <Slider
-              value={dataDays}
-              min={30}
-              max={1000}
+              value={trainBars}
+              min={10}
+              max={200}
               step={10}
-              onChange={setDataDays}
+              onChange={setTrainBars}
             />
           </div>
 
@@ -298,29 +320,10 @@ export default function TrainingPage() {
   // Hide stock name/code during training (blind training)
   const blindMode = !currentTraining?.stock_name;
 
-  const sidebarContent = showDrawing ? (
-    <DrawingTool
-      activeTool={activeDrawingTool}
-      onSelectTool={setActiveDrawingTool}
-      onClearAll={clearDrawings}
-    />
-  ) : (
-    <div className="sidebar-placeholder">
-      <p className="sidebar-placeholder__text">側邊欄</p>
-      <p className="sidebar-placeholder__hint">選擇繪圖工具或指標</p>
-    </div>
-  );
-
   return (
     <div className="training-layout">
       {/* Top Bar */}
       <div className="top-bar">
-        <button
-          className="top-bar__toggle"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
-          {sidebarOpen ? "◀" : "▶"}
-        </button>
         <span className="top-bar__stock">
           {blindMode ? "????" : currentTraining?.stock_name ?? "--"} ({blindMode ? "????" : currentTraining?.stock_code ?? "--"})
         </span>
@@ -337,20 +340,41 @@ export default function TrainingPage() {
 
       {/* Main Area */}
       <div className="main-area">
-        {sidebarOpen && <div className="sidebar">{sidebarContent}</div>}
+        {/* Sidebar: icon bar (always visible) + drawing panel (when open) */}
+        <div className={`sidebar${sidebarOpen ? " sidebar--open" : ""}`}>
+          <div className="sidebar__icons">
+            <button
+              className={`sidebar__icon-btn${sidebarOpen ? " sidebar__icon-btn--active" : ""}`}
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              title={sidebarOpen ? "收起繪圖工具" : "展開繪圖工具"}
+            >
+              ✏️
+            </button>
+          </div>
+          {sidebarOpen && (
+            <div className="sidebar__panel">
+              <DrawingTool
+                activeTool={activeDrawingTool}
+                onSelectTool={setActiveDrawingTool}
+                onClearAll={clearDrawings}
+              />
+            </div>
+          )}
+        </div>
 
         <div className="chart-area">
           <ChartToolbar
             period={currentPeriod as Period ?? period}
             onPeriodChange={() => {}}
             indicators={indicators}
-            onToggleIndicator={() => {}}
-            onOpenSubChart={() => setShowSubChart(true)}
-            onOpenDrawing={() => setShowDrawing(!showDrawing)}
+            onAddIndicator={addIndicator}
+            onRemoveIndicator={removeIndicator}
+            onUpdateIndicator={updateIndicator}
+            onToggleDrawing={() => setSidebarOpen(!sidebarOpen)}
             activeDrawingTool={activeDrawingTool}
           />
           <div className="chart-area__canvas">
-            <KlineChart />
+            <KlineChart maParams={maParams} />
           </div>
         </div>
       </div>
@@ -361,16 +385,6 @@ export default function TrainingPage() {
         <div className="bottom-bar__divider" />
         <TrainingPanel />
       </div>
-
-      {/* SubChart Selector Modal */}
-      {showSubChart && (
-        <SubChartSelector
-          activeIndicators={indicators}
-          onAdd={addIndicator}
-          onRemove={removeIndicator}
-          onClose={() => setShowSubChart(false)}
-        />
-      )}
 
       {/* Complete Modal - reveals the stock */}
       {phase === "complete" && currentTraining && (

@@ -85,4 +85,4 @@ class PositionSnapshot(Base):
     cost_price: Mapped[float] = mapped_column(Float, nullable=False)
     market_value: Mapped[float] = mapped_column(Float, nullable=False)
     unrealized_pnl: Mapped[float] = mapped_column(Float, nullable=False)
-    realized_pnl: Mapped[float] = mapped_column(Float, nullable=True)
+    realized_pnl: Mapped[float | None] = mapped_column(Float, nullable=True)

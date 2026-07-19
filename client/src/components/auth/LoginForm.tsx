@@ -27,8 +27,9 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
       await login(username.trim(), password);
       navigate("/dashboard");
     } catch (err: unknown) {
-      const msg =
-        err instanceof Error ? err.message : "登入失敗，請檢查用戶名和密碼";
+      const axiosErr = err as { response?: { status?: number; data?: { detail?: string } } };
+      const msg = axiosErr.response?.data?.detail
+        ?? (err instanceof Error ? err.message : "登入失敗，請檢查用戶名和密碼");
       setError(msg);
     } finally {
       setLoading(false);

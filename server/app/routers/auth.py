@@ -1,6 +1,6 @@
 # server/app/routers/auth.py
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -19,13 +19,19 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 # ── Pydantic schemas ──────────────────────────────────────────────
 
 class RegisterRequest(BaseModel):
-    username: str = Field(min_length=3, max_length=50)
-    password: str = Field(min_length=6)
+    username: str = Field(
+        ..., min_length=3, max_length=50,
+        description="用戶名（3-50 字符）",
+    )
+    password: str = Field(
+        ..., min_length=6,
+        description="密碼（至少 6 位）",
+    )
 
 
 class LoginRequest(BaseModel):
-    username: str
-    password: str
+    username: str = Field(..., min_length=1, description="用戶名")
+    password: str = Field(..., min_length=1, description="密碼")
 
 
 class TokenResponse(BaseModel):
@@ -46,12 +52,12 @@ class UserResponse(BaseModel):
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 def register(payload: RegisterRequest, db: Session = Depends(get_db)):
-    """Register a new user account."""
+    """註冊新帳號。"""
     existing = get_user_by_username(db, payload.username)
     if existing is not None:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Username already taken",
+            detail=f"用戶名「{payload.username}」已被註冊，請更換後重試",
         )
 
     user = create_user(db, payload.username, payload.password)
@@ -66,12 +72,20 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=TokenResponse)
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
-    """Log in with username and password."""
+    """用戶登入。"""
+    # Check if user exists at all (for better error msg)
+    existing = get_user_by_username(db, payload.username)
+    if existing is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"用戶名「{payload.username}」不存在，請先註冊",
+        )
+
     user = authenticate_user(db, payload.username, payload.password)
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or password",
+            detail="密碼錯誤，請重新輸入",
         )
 
     access_token = create_access_token(user.id)
@@ -85,7 +99,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user=Depends(get_current_user)):
-    """Return the currently authenticated user's profile."""
+    """獲取當前登入用戶的資料。"""
     return UserResponse(
         id=current_user.id,
         username=current_user.username,

@@ -1,4 +1,11 @@
 # server/app/main.py
+import os
+
+# Bypass system proxy for domestic stock APIs (eastmoney, etc.)
+for key in ["HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy", "ALL_PROXY", "all_proxy"]:
+    os.environ.pop(key, None)
+os.environ["NO_PROXY"] = "*"
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 

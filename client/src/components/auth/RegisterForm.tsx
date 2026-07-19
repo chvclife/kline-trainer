@@ -38,8 +38,9 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
       await register(username.trim(), password);
       navigate("/dashboard");
     } catch (err: unknown) {
-      const msg =
-        err instanceof Error ? err.message : "註冊失敗，請稍後再試";
+      const axiosErr = err as { response?: { status?: number; data?: { detail?: string } } };
+      const msg = axiosErr.response?.data?.detail
+        ?? (err instanceof Error ? err.message : "註冊失敗，請稍後再試");
       setError(msg);
     } finally {
       setLoading(false);
