@@ -86,12 +86,13 @@ interface UseMAOverlayOptions {
 
 export function useMAOverlay({ chartRef, containerRef, maParams }: UseMAOverlayOptions) {
   const overlayRef = useRef<HTMLCanvasElement | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Subscribe to store for reactive updates
   const allKlineData = useTrainingStore((s) => s.allKlineData);
   const currentIndex = useTrainingStore((s) => s.currentIndex);
 
-  // Main draw effect — creates canvas lazily, redraws on data change
+  // Main draw effect — creates canvas lazily, redraws with debounce on data change
   useEffect(() => {
     const chart = chartRef.current;
     const container = containerRef.current;
@@ -107,8 +108,17 @@ export function useMAOverlay({ chartRef, containerRef, maParams }: UseMAOverlayO
       overlayRef.current = canvas;
     }
 
-    drawLines(chart, overlayRef.current, allKlineData, currentIndex, maParams);
+    // Debounce: wait for chart animation to settle before drawing
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      drawLines(chart, overlayRef.current!, allKlineData, currentIndex, maParams);
+    }, 350);
   }, [chartRef, containerRef, allKlineData, currentIndex, maParams]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, []);
 
   return overlayRef;
 }
