@@ -110,33 +110,5 @@ export function useMAOverlay({ chartRef, containerRef, maParams }: UseMAOverlayO
     drawLines(chart, overlayRef.current, allKlineData, currentIndex, maParams);
   }, [chartRef, containerRef, allKlineData, currentIndex, maParams]);
 
-  // Subscribe to chart scroll/zoom with throttle to prevent flicker
-  useEffect(() => {
-    const chart = chartRef.current;
-    if (!chart) return;
-
-    let rafId = 0;
-    const onAction = () => {
-      if (rafId) return; // throttle: only one pending redraw
-      rafId = requestAnimationFrame(() => {
-        rafId = 0;
-        const ch = chartRef.current;
-        const cv = overlayRef.current;
-        if (!ch || !cv || maParams.length === 0) return;
-        const s = useTrainingStore.getState();
-        if (s.allKlineData.length === 0) return;
-        drawLines(ch, cv, s.allKlineData, s.currentIndex, maParams);
-      });
-    };
-
-    chart.subscribeAction("scroll", onAction);
-    chart.subscribeAction("zoom", onAction);
-    return () => {
-      chart.unsubscribeAction("scroll", onAction);
-      chart.unsubscribeAction("zoom", onAction);
-      if (rafId) cancelAnimationFrame(rafId);
-    };
-  }, [chartRef, maParams]);
-
   return overlayRef;
 }
