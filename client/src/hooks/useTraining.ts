@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useTrainingStore } from "../store/trainingStore";
 import { stockApi, trainingApi } from "../services/api";
 
@@ -151,21 +151,26 @@ export function useTraining() {
   }, [stepForward, currentTraining, allKlineData]);
 
   const startReplay = useCallback(() => {
+    // Clear any existing timer first
+    if (replayTimer.current) {
+      clearInterval(replayTimer.current);
+      replayTimer.current = null;
+    }
     setPlayMode("replay");
+    // Read playSpeed fresh from store each tick to support speed changes mid-replay
     replayTimer.current = setInterval(() => {
       const store = useTrainingStore.getState();
       if (store.currentIndex < store.dataLength - 1) {
         stepForward();
       } else {
-        // Reached end
         if (replayTimer.current) {
           clearInterval(replayTimer.current);
           replayTimer.current = null;
         }
         setPlayMode("manual");
       }
-    }, 1000 / playSpeed);
-  }, [setPlayMode, playSpeed, stepForward]);
+    }, 1000 / useTrainingStore.getState().playSpeed);
+  }, [setPlayMode, stepForward]);
 
   const stopReplay = useCallback(() => {
     if (replayTimer.current) {
@@ -174,6 +179,36 @@ export function useTraining() {
     }
     setPlayMode("manual");
   }, [setPlayMode]);
+
+  // Cleanup replay timer on unmount
+  useEffect(() => {
+    return () => {
+      if (replayTimer.current) {
+        clearInterval(replayTimer.current);
+        replayTimer.current = null;
+      }
+    };
+  }, []);
+
+  // Restart replay interval when speed changes during active replay
+  useEffect(() => {
+    if (playMode === "replay" && replayTimer.current) {
+      // Recreate interval with new speed
+      clearInterval(replayTimer.current);
+      replayTimer.current = setInterval(() => {
+        const store = useTrainingStore.getState();
+        if (store.currentIndex < store.dataLength - 1) {
+          stepForward();
+        } else {
+          if (replayTimer.current) {
+            clearInterval(replayTimer.current);
+            replayTimer.current = null;
+          }
+          setPlayMode("manual");
+        }
+      }, 1000 / playSpeed);
+    }
+  }, [playSpeed, playMode, stepForward, setPlayMode]);
 
   const completeTraining = useCallback(async () => {
     if (currentTraining) {

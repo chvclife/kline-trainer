@@ -53,7 +53,6 @@ export default function TrainingPage() {
     currentTraining,
     position,
     costPrice,
-    period: currentPeriod,
   } = useTraining();
 
   const indicators = useChartStore((s) => s.indicators);
@@ -307,8 +306,8 @@ export default function TrainingPage() {
   }
 
   // ---- Training Phase ----
-  // Hide stock name/code during training (blind training)
-  const blindMode = !currentTraining?.stock_name;
+  // Blind training: stock identity hidden until training completes
+  const blindMode = currentTraining?.status !== "completed" && currentTraining?.stock_name != null;
 
   return (
     <div className="training-layout">
@@ -317,7 +316,7 @@ export default function TrainingPage() {
         <span className="top-bar__stock">
           {blindMode ? "????" : currentTraining?.stock_name ?? "--"} ({blindMode ? "????" : currentTraining?.stock_code ?? "--"})
         </span>
-        <span className="top-bar__period">{currentPeriod ?? period}</span>
+        <span className="top-bar__period">{currentTraining?.period ?? period}</span>
         <div className="top-bar__spacer" />
         <span className="top-bar__index">
           {currentIndex + 1} / {dataLength}
@@ -354,8 +353,8 @@ export default function TrainingPage() {
 
         <div className="chart-area">
           <ChartToolbar
-            period={currentPeriod as Period ?? period}
-            onPeriodChange={() => {}}
+            period={(currentTraining?.period ?? period) as Period}
+            onPeriodChange={() => { /* period is locked during training */ }}
             indicators={indicators}
             onAddIndicator={addIndicator}
             onRemoveIndicator={removeIndicator}

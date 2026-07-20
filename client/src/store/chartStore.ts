@@ -7,14 +7,12 @@ const DEFAULT_INDICATORS: IndicatorConfig[] = [
 
 interface ChartState {
   indicators: IndicatorConfig[];
-  subChartCount: number;
   activeDrawingTool: string | null;
   drawings: Drawing[];
 
   addIndicator: (indicator: IndicatorConfig) => void;
   removeIndicator: (index: number) => void;
   updateIndicator: (index: number, indicator: IndicatorConfig) => void;
-  setSubChartCount: (count: number) => void;
   setActiveDrawingTool: (tool: string | null) => void;
   addDrawing: (drawing: Drawing) => void;
   removeDrawing: (id: string) => void;
@@ -23,7 +21,6 @@ interface ChartState {
 
 export const useChartStore = create<ChartState>((set) => ({
   indicators: DEFAULT_INDICATORS,
-  subChartCount: 1,
   activeDrawingTool: null,
   drawings: [],
 
@@ -39,8 +36,6 @@ export const useChartStore = create<ChartState>((set) => ({
     set((state) => ({
       indicators: state.indicators.map((ind, i) => (i === index ? indicator : ind)),
     })),
-
-  setSubChartCount: (count: number) => set({ subChartCount: count }),
 
   setActiveDrawingTool: (tool: string | null) =>
     set({ activeDrawingTool: tool }),
