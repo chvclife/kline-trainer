@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import { init, dispose } from "klinecharts";
 import type { Chart, KLineData } from "klinecharts";
 import { useTrainingStore } from "../store/trainingStore";
@@ -77,7 +77,7 @@ export function useChart({ containerRef, chartId }: UseChartOptions) {
   const chartRef = useRef<Chart | null>(null);
   const dataRef = useRef<KLineData[]>([]);
   const prevLenRef = useRef(0);
-  const dataLoaderSetRef = useRef(false);
+  const loaderFnRef = useRef<((params: any) => void) | null>(null);
 
   // --- Chart init / dispose ---
   useEffect(() => {
@@ -91,23 +91,28 @@ export function useChart({ containerRef, chartId }: UseChartOptions) {
     }
     chartRef.current = chart;
 
-    // Set up DataLoader once — it reads from dataRef.current
+    // IMPORTANT: klinecharts v10 requires setSymbol + setPeriod before DataLoader will work.
+    // _processDataLoad checks isValid(_symbol) && isValid(_period) — both must be non-null.
+    // setSymbol/setPeriod each call resetData() internally, which triggers getBars.
+    // We use a mutable loader function so the DataLoader always reads current data.
+    chart.setSymbol({ ticker: "training", pricePrecision: 4, volumePrecision: 0 });
+    chart.setPeriod({ type: "day", span: 1 });
+
+    // Set up DataLoader with a mutable loader function
     chart.setDataLoader({
       getBars: (params) => {
-        if (params.type === "init") {
-          params.callback(dataRef.current, { backward: false, forward: false });
+        if (loaderFnRef.current) {
+          loaderFnRef.current(params);
         } else {
-          // No more data on scroll
           params.callback([], { backward: false, forward: false });
         }
       },
     });
-    dataLoaderSetRef.current = true;
 
     return () => {
       dispose(chart);
       chartRef.current = null;
-      dataLoaderSetRef.current = false;
+      loaderFnRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -131,20 +136,17 @@ export function useChart({ containerRef, chartId }: UseChartOptions) {
       prevLenRef.current = klineData.length;
       dataRef.current = klineData;
 
-      // Set symbol with proper price precision for A-share after-adjustment data
-      // Detect precision from the first bar's close price
-      const samplePrice = klineData[0]?.close ?? 0;
-      const priceStr = samplePrice.toString();
-      const decimalPart = priceStr.includes(".") ? priceStr.split(".")[1] : "";
-      const pricePrecision = Math.min(Math.max(decimalPart.length, 2), 4);
+      // Update the loader function to return current data
+      loaderFnRef.current = (params: any) => {
+        if (params.type === "init") {
+          params.callback(dataRef.current, { backward: false, forward: false });
+        } else {
+          // No more data on scroll forward/backward
+          params.callback([], { backward: false, forward: false });
+        }
+      };
 
-      chart.setSymbol({
-        ticker: "training",
-        pricePrecision,
-        volumePrecision: 0,
-      });
-
-      // Reset data — DataLoader will read from dataRef.current
+      // Trigger data reload via resetData
       chart.resetData();
     }
   }, [allKlineData, currentIndex]);
