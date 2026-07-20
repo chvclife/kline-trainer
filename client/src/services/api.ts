@@ -130,6 +130,8 @@ export const trainingApi = {
     period: string;
     start_date: string;
     end_date: string;
+    current_index?: number;
+    train_bars?: number;
   }): Promise<TrainingRecord> {
     const res = await api.post<TrainingRecord>("/trainings", data);
     return res.data;

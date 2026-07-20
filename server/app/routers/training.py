@@ -31,6 +31,8 @@ class CreateTrainingRequest(BaseModel):
     period: str = Field(..., min_length=1, max_length=10)
     start_date: str
     end_date: str
+    current_index: int | None = None
+    train_bars: int | None = None
     note: str | None = None
 
 

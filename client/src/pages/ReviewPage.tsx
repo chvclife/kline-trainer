@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { trainingApi } from "../services/api";
+import { trainingApi, stockApi } from "../services/api";
+import { useTrainingStore } from "../store/trainingStore";
 import KlineChart from "../components/chart/KlineChart";
 import Skeleton from "../components/common/Skeleton";
 import "./ReviewPage.css";
@@ -39,14 +40,39 @@ export default function ReviewPage() {
     if (!id) return;
     async function fetch() {
       try {
-        const [t, tr] = await Promise.all([
-          trainingApi.get(id!),
-          trainingApi.getTrades(id!),
-        ]);
+        const t = await trainingApi.get(id!);
         setTraining(t);
-        setTrades(tr);
+
+        // Fetch trades
+        try {
+          const tr = await trainingApi.getTrades(id!);
+          setTrades(tr);
+        } catch {
+          // Trades may not exist
+        }
+
+        // Load K-line data into the store so the chart renders
+        const startDate = t.start_date?.slice(0, 10);
+        const endDate = t.end_date?.slice(0, 10);
+        if (startDate && endDate) {
+          try {
+            const klineResp = await stockApi.getKline(t.stock_code, t.period, startDate, endDate);
+            if (klineResp.data && klineResp.data.length > 0) {
+              // Show all data up to the training end point
+              const endIndex = Math.min(t.current_index, klineResp.data.length - 1);
+              useTrainingStore.setState({
+                allKlineData: klineResp.data,
+                dataLength: klineResp.data.length,
+                currentIndex: Math.max(0, endIndex),
+                currentTraining: t,
+              });
+            }
+          } catch {
+            // Chart will be empty, but stats still show
+          }
+        }
       } catch {
-        // Could show error
+        // Training not found
       } finally {
         setLoading(false);
       }
@@ -147,13 +173,6 @@ export default function ReviewPage() {
                   {fmtNum(training.sharpe_ratio)}
                 </span>
               </div>
-            </div>
-
-            <div className="review-card__benchmark">
-              <span className="review-card__stat-label">基準收益</span>
-              <span className="review-card__stat-value">
-                {fmtPct(training.benchmark_return)}
-              </span>
             </div>
           </div>
 

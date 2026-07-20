@@ -31,20 +31,35 @@ export default function DashboardPage() {
   const logout = useAuthStore((s) => s.logout);
   const [records, setRecords] = useState<TrainingRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetch() {
-      try {
-        const data = await trainingApi.list(1, 50);
-        setRecords(data.items);
-      } catch {
-        // Could show error toast
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetch();
+    fetchRecords();
   }, []);
+
+  async function fetchRecords() {
+    try {
+      const data = await trainingApi.list(1, 50);
+      setRecords(data.items);
+    } catch {
+      // Could show error toast
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("確定要刪除這條訓練記錄嗎？")) return;
+    setDeleting(id);
+    try {
+      await trainingApi.remove(id);
+      setRecords((prev) => prev.filter((r) => r.id !== id));
+    } catch {
+      alert("刪除失敗，請稍後再試");
+    } finally {
+      setDeleting(null);
+    }
+  }
 
   return (
     <div className="dashboard-layout">
@@ -131,6 +146,13 @@ export default function DashboardPage() {
                         繼續
                       </button>
                     )}
+                    <button
+                      className="dashboard-table__delete-btn"
+                      onClick={() => handleDelete(r.id)}
+                      disabled={deleting === r.id}
+                    >
+                      {deleting === r.id ? "..." : "刪除"}
+                    </button>
                   </td>
                 </tr>
               ))}

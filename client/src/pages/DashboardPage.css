@@ -141,3 +141,44 @@
 .dashboard-table__review-btn:hover {
   background: var(--surface-2);
 }
+
+.dashboard-table__continue-btn {
+  background: none;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 2px 12px;
+  color: var(--accent);
+  font-size: var(--font-label);
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-left: 4px;
+}
+
+.dashboard-table__continue-btn:hover {
+  background: var(--accent);
+  color: var(--surface-0);
+}
+
+.dashboard-table__delete-btn {
+  background: none;
+  border: 1px solid var(--surface-3);
+  border-radius: var(--radius-sm);
+  padding: 2px 12px;
+  color: var(--bear);
+  font-size: var(--font-label);
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-left: 4px;
+}
+
+.dashboard-table__delete-btn:hover {
+  background: var(--bear);
+  color: var(--surface-0);
+}
+
+.dashboard-table__delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

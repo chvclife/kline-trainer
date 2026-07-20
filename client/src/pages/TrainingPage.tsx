@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import KlineChart from "../components/chart/KlineChart";
 import Button from "../components/common/Button";
@@ -17,7 +17,7 @@ import { useChartStore } from "../store/chartStore";
 import { stockApi } from "../services/api";
 import type { Period, StockItem } from "../types";
 
-type Phase = "setup" | "training" | "complete";
+type Phase = "setup" | "loading" | "training" | "complete";
 
 const DEFAULT_PERIOD: Period = "1d";
 const FETCH_DATA_DAYS = 500;   // Always load ~2 years of data, independent of training length
@@ -26,7 +26,7 @@ const DEFAULT_TRAIN_BARS = 50; // Default: trade through the last 50 bars
 export default function TrainingPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const [phase, setPhase] = useState<Phase>("setup");
+  const [phase, setPhase] = useState<Phase>(id ? "loading" : "setup");
 
   // Setup state
   const [selectedStock, setSelectedStock] = useState<StockItem | null>(null);
@@ -37,6 +37,10 @@ export default function TrainingPage() {
   const [period, setPeriodState] = useState<Period>(DEFAULT_PERIOD);
   const [trainBars, setTrainBars] = useState(DEFAULT_TRAIN_BARS);
   const [startError, setStartError] = useState<string | null>(null);
+  const [resumeError, setResumeError] = useState<string | null>(null);
+
+  // Track whether this training was started as random (blind)
+  const [isRandomTraining, setIsRandomTraining] = useState(false);
 
   // Sidebar state (drawing tools only; indicators via ChartToolbar dropdown)
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -49,7 +53,6 @@ export default function TrainingPage() {
     resumeTraining,
     completeTraining,
     reset,
-    isTraining,
     currentTraining,
     position,
     costPrice,
@@ -63,40 +66,59 @@ export default function TrainingPage() {
   const setActiveDrawingTool = useChartStore((s) => s.setActiveDrawingTool);
   const clearDrawings = useChartStore((s) => s.clearDrawings);
 
-  // Debounced search
-  const debounceRef = useCallback(() => {
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    return (query: string) => {
-      if (timer) clearTimeout(timer);
-      if (!query.trim()) {
+  // Debounced search — use a ref for the timer so it persists across renders
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  function handleSearchInput(query: string) {
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    if (!query.trim()) {
+      setSearchResults([]);
+      setSearchLoading(false);
+      return;
+    }
+    setSearchLoading(true);
+    searchTimerRef.current = setTimeout(async () => {
+      try {
+        const items = await stockApi.search(query.trim());
+        setSearchResults(items);
+      } catch {
         setSearchResults([]);
-        return;
+      } finally {
+        setSearchLoading(false);
       }
-      setSearchLoading(true);
-      timer = setTimeout(async () => {
-        try {
-          const items = await stockApi.search(query.trim());
-          setSearchResults(items);
-        } catch {
-          setSearchResults([]);
-        } finally {
-          setSearchLoading(false);
-        }
-      }, 300);
+    }, 300);
+  }
+
+  // Cleanup search timer on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     };
-  }, [])();
+  }, []);
 
   // Resume training when route has an id param
   useEffect(() => {
-    if (id) {
-      resumeTraining(id)
-        .then(() => setPhase("training"))
-        .catch(() => navigate("/dashboard"));
-    }
+    if (!id) return;
+
+    setPhase("loading");
+    setResumeError(null);
+
+    resumeTraining(id)
+      .then(() => setPhase("training"))
+      .catch((err) => {
+        if (err?.message === "completed") {
+          // Already completed — redirect to review
+          navigate(`/review/${id}`, { replace: true });
+        } else {
+          const msg = err?.response?.data?.detail
+            ?? (err instanceof Error ? err.message : "無法載入訓練記錄");
+          setResumeError(msg);
+          setPhase("setup");
+        }
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  async function handleStartWithStock(stock: StockItem) {
+  async function handleStartWithStock(stock: StockItem, isRandom: boolean) {
     // Always fetch FETCH_DATA_DAYS of data regardless of training length
     const end = new Date();
     const start = new Date();
@@ -105,6 +127,7 @@ export default function TrainingPage() {
 
     setStarting(true);
     setStartError(null);
+    setIsRandomTraining(isRandom);
     try {
       await startTraining(stock.code, period, fmt(start), fmt(end), trainBars);
       setPhase("training");
@@ -129,7 +152,7 @@ export default function TrainingPage() {
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       try {
         const stock = await stockApi.random();
-        await handleStartWithStock(stock);
+        await handleStartWithStock(stock, true);
         return; // Success — exit function
       } catch (err: unknown) {
         const axiosErr = err as { response?: { status?: number; data?: { detail?: string } } };
@@ -151,7 +174,7 @@ export default function TrainingPage() {
 
   async function handleSearchStart() {
     if (!selectedStock) return;
-    await handleStartWithStock(selectedStock);
+    await handleStartWithStock(selectedStock, false);
   }
 
   async function handleComplete() {
@@ -167,6 +190,7 @@ export default function TrainingPage() {
     setPhase("setup");
     setSelectedStock(null);
     setStartError(null);
+    setIsRandomTraining(false);
   }
 
   function handleReview() {
@@ -180,6 +204,17 @@ export default function TrainingPage() {
     navigate("/dashboard");
   }
 
+  // ---- Loading Phase (resume) ----
+  if (phase === "loading") {
+    return (
+      <div className="setup-layout">
+        <div className="setup-card" style={{ textAlign: "center", padding: "60px 40px" }}>
+          <p style={{ fontSize: "18px", color: "var(--text-secondary)" }}>載入訓練中...</p>
+        </div>
+      </div>
+    );
+  }
+
   // ---- Setup Phase ----
   if (phase === "setup") {
     return (
@@ -187,6 +222,12 @@ export default function TrainingPage() {
         <div className="setup-card">
           <h1 className="setup-card__title">K線訓練</h1>
           <p className="setup-card__subtitle">選擇方式，開始訓練你的交易技巧</p>
+
+          {resumeError && (
+            <div className="setup-card__error" style={{ marginBottom: "16px" }}>
+              {resumeError}
+            </div>
+          )}
 
           {/* Period selector */}
           <div className="setup-card__section">
@@ -244,7 +285,7 @@ export default function TrainingPage() {
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
-                  debounceRef(e.target.value);
+                  handleSearchInput(e.target.value);
                 }}
                 placeholder="搜尋股票代碼或名稱..."
               />
@@ -306,8 +347,8 @@ export default function TrainingPage() {
   }
 
   // ---- Training Phase ----
-  // Blind training: stock identity hidden until training completes
-  const blindMode = currentTraining?.status !== "completed" && currentTraining?.stock_name != null;
+  // Blind training: hide stock identity only for random trainings until completed
+  const blindMode = isRandomTraining && currentTraining?.status !== "completed";
 
   return (
     <div className="training-layout">

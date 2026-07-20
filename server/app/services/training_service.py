@@ -25,6 +25,7 @@ def create_training(db: Session, user_id: str, data: dict) -> Training:
         period=data["period"],
         start_date=_parse_date(data["start_date"]),
         end_date=_parse_date(data["end_date"]),
+        current_index=data.get("current_index", 0),
         note=data.get("note"),
     )
     db.add(training)

@@ -22,6 +22,29 @@ export function useTraining() {
   const replayTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const saveCounter = useRef(0);
 
+  /** Save current_index to backend (fire-and-forget) */
+  const persistIndex = useCallback((trainingId: string, index: number) => {
+    trainingApi.update(trainingId, { current_index: index }).catch(() => {});
+  }, []);
+
+  /** Save snapshot to backend (fire-and-forget) */
+  const persistSnapshot = useCallback((trainingId: string) => {
+    const state = useTrainingStore.getState();
+    const close = state.allKlineData[state.currentIndex]?.close ?? 0;
+    const marketValue = state.position * close;
+    const unrealizedPnl = state.position > 0
+      ? marketValue - state.costPrice * state.position
+      : 0;
+    trainingApi.addSnapshot(trainingId, {
+      kline_index: state.currentIndex,
+      position: state.position,
+      cost_price: state.costPrice,
+      market_value: marketValue,
+      unrealized_pnl: unrealizedPnl,
+      realized_pnl: 0,
+    }).catch(() => {});
+  }, []);
+
   const startTraining = useCallback(
     async (
       code: string,
@@ -47,13 +70,18 @@ export function useTraining() {
         throw new Error(`無法獲取 ${code} 的K線數據，請換一隻股票或調整日期範圍`);
       }
 
-      // Create training record
+      // Calculate the initial reveal index (same logic as trainingStore.setKlineData)
+      const tail = trainBars ?? Math.min(50, Math.floor(klineResp.data.length * 0.15));
+      const initialIndex = Math.max(0, klineResp.data.length - 1 - tail);
+
+      // Create training record with the correct initial index
       const training = await trainingApi.create({
         stock_code: code,
         stock_name: name,
         period,
         start_date: start,
         end_date: end,
+        current_index: initialIndex,
       });
 
       // Use the trainBars parameter for initial reveal index
@@ -69,18 +97,28 @@ export function useTraining() {
       const training = await trainingApi.get(id);
       if (!training) throw new Error("Training record not found");
 
+      // If already completed, throw so the page can redirect to review
+      if (training.status === "completed") {
+        throw new Error("completed");
+      }
+
+      // Normalize dates to YYYY-MM-DD (backend returns ISO datetime)
+      const startDate = training.start_date?.slice(0, 10);
+      const endDate = training.end_date?.slice(0, 10);
+
       // Fetch K-line data using the stored parameters
       const klineResp = await stockApi.getKline(
         training.stock_code,
         training.period,
-        training.start_date,
-        training.end_date,
+        startDate,
+        endDate,
       );
 
-      // Set the data directly in the store with restored state
-      const store = useTrainingStore.getState();
+      if (!klineResp.data || klineResp.data.length === 0) {
+        throw new Error("無法獲取K線數據");
+      }
 
-      // Find last snapshot to restore position/costPrice
+      // Restore position/costPrice from the last snapshot
       let restoredPosition = 0;
       let restoredCostPrice = 0;
       let restoredTrades: import("../types").TradeRecord[] = [];
@@ -95,10 +133,13 @@ export function useTraining() {
         restoredTrades = training.trades;
       }
 
+      // Clamp current_index to valid range
+      const clampedIndex = Math.min(training.current_index, klineResp.data.length - 1);
+
       useTrainingStore.setState({
         allKlineData: klineResp.data,
         dataLength: klineResp.data.length,
-        currentIndex: training.current_index,
+        currentIndex: Math.max(0, clampedIndex),
         position: restoredPosition,
         costPrice: restoredCostPrice,
         trades: restoredTrades,
@@ -119,36 +160,19 @@ export function useTraining() {
     stepForward();
     saveCounter.current += 1;
 
-    // Auto-save snapshot every 5 K-lines
-    if (saveCounter.current % 5 === 0 && currentTraining) {
-      const state = useTrainingStore.getState();
-      try {
-        const marketValue = state.position * (allKlineData[state.currentIndex]?.close ?? 0);
-        const unrealizedPnl = state.position > 0
-          ? marketValue - state.costPrice * state.position
-          : 0;
-        await trainingApi.addSnapshot(currentTraining.id, {
-          kline_index: state.currentIndex,
-          position: state.position,
-          cost_price: state.costPrice,
-          market_value: marketValue,
-          unrealized_pnl: unrealizedPnl,
-          realized_pnl: 0,
-        });
-      } catch {
-        // Silent fail
-      }
+    const training = useTrainingStore.getState().currentTraining;
+    if (!training) return;
 
-      // Save current_index
-      try {
-        await trainingApi.update(currentTraining.id, {
-          current_index: state.currentIndex,
-        });
-      } catch {
-        // Silent fail
-      }
+    const newIndex = useTrainingStore.getState().currentIndex;
+
+    // Persist current_index on every step
+    persistIndex(training.id, newIndex);
+
+    // Save snapshot every 5 steps
+    if (saveCounter.current % 5 === 0) {
+      persistSnapshot(training.id);
     }
-  }, [stepForward, currentTraining, allKlineData]);
+  }, [stepForward, persistIndex, persistSnapshot]);
 
   const startReplay = useCallback(() => {
     // Clear any existing timer first
@@ -157,11 +181,23 @@ export function useTraining() {
       replayTimer.current = null;
     }
     setPlayMode("replay");
-    // Read playSpeed fresh from store each tick to support speed changes mid-replay
+
+    const interval = 1000 / useTrainingStore.getState().playSpeed;
     replayTimer.current = setInterval(() => {
       const store = useTrainingStore.getState();
       if (store.currentIndex < store.dataLength - 1) {
         stepForward();
+
+        // Persist index and snapshot during replay too
+        const training = store.currentTraining;
+        if (training) {
+          const newIndex = useTrainingStore.getState().currentIndex;
+          persistIndex(training.id, newIndex);
+          saveCounter.current += 1;
+          if (saveCounter.current % 5 === 0) {
+            persistSnapshot(training.id);
+          }
+        }
       } else {
         if (replayTimer.current) {
           clearInterval(replayTimer.current);
@@ -169,8 +205,8 @@ export function useTraining() {
         }
         setPlayMode("manual");
       }
-    }, 1000 / useTrainingStore.getState().playSpeed);
-  }, [setPlayMode, stepForward]);
+    }, interval);
+  }, [setPlayMode, stepForward, persistIndex, persistSnapshot]);
 
   const stopReplay = useCallback(() => {
     if (replayTimer.current) {
@@ -193,12 +229,21 @@ export function useTraining() {
   // Restart replay interval when speed changes during active replay
   useEffect(() => {
     if (playMode === "replay" && replayTimer.current) {
-      // Recreate interval with new speed
       clearInterval(replayTimer.current);
       replayTimer.current = setInterval(() => {
         const store = useTrainingStore.getState();
         if (store.currentIndex < store.dataLength - 1) {
           stepForward();
+
+          const training = store.currentTraining;
+          if (training) {
+            const newIndex = useTrainingStore.getState().currentIndex;
+            persistIndex(training.id, newIndex);
+            saveCounter.current += 1;
+            if (saveCounter.current % 5 === 0) {
+              persistSnapshot(training.id);
+            }
+          }
         } else {
           if (replayTimer.current) {
             clearInterval(replayTimer.current);
@@ -208,11 +253,16 @@ export function useTraining() {
         }
       }, 1000 / playSpeed);
     }
-  }, [playSpeed, playMode, stepForward, setPlayMode]);
+  }, [playSpeed, playMode, stepForward, setPlayMode, persistIndex, persistSnapshot]);
 
   const completeTraining = useCallback(async () => {
     if (currentTraining) {
       stopReplay();
+
+      // Save final snapshot before completing
+      persistSnapshot(currentTraining.id);
+      persistIndex(currentTraining.id, useTrainingStore.getState().currentIndex);
+
       const metrics = await trainingApi.complete(currentTraining.id);
       // Update the store with the completed training data
       useTrainingStore.setState({
@@ -227,7 +277,7 @@ export function useTraining() {
         },
       });
     }
-  }, [currentTraining, stopReplay]);
+  }, [currentTraining, stopReplay, persistSnapshot, persistIndex]);
 
   return {
     startTraining,
