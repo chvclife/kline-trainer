@@ -1,20 +1,12 @@
 import { useRef, useId } from 'react';
 import { useChart } from '../../hooks/useChart';
-import { useMAOverlay } from '../../hooks/useMAOverlay';
 
-interface KlineChartProps {
-  maParams?: number[];
-}
-
-export default function KlineChart({ maParams = [] }: KlineChartProps) {
+export default function KlineChart() {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartId = useId();
 
-  // Initialize chart with klinecharts, sync data and sub-chart indicators (MACD/RSI/KDJ)
-  const chartRef = useChart({ containerRef, chartId });
-
-  // Draw MA lines directly on main chart canvas (同花顺 style)
-  useMAOverlay({ chartRef, containerRef, maParams });
+  // Initialize chart with klinecharts, sync data and indicators (MA/MACD/RSI/KDJ)
+  useChart({ containerRef, chartId });
 
   return (
     <div

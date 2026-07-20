@@ -17,23 +17,27 @@ export const INDICATOR_REGISTRY: Record<
     config: {
       name: "MA",
       type: "overlay",
-      params: { period1: 5, period2: 10, period3: 20 },
+      params: { p1: 5, p2: 10, p3: 20, p4: 60 },
     },
-    calculate: (data, params) => ({
-      ma1: calculateMA(data, params.period1),
-      ma2: calculateMA(data, params.period2),
-      ma3: calculateMA(data, params.period3),
-    }),
+    calculate: (data, params) => {
+      const periods: number[] = [];
+      for (let i = 1; i <= 10; i++) {
+        const v = params[`p${i}`];
+        if (v != null && v > 0) periods.push(v);
+      }
+      const result: Record<string, number[]> = {};
+      periods.forEach((p, i) => { result[`ma${i + 1}`] = calculateMA(data, p); });
+      return result;
+    },
   },
   EMA: {
     config: {
       name: "EMA",
       type: "overlay",
-      params: { period1: 5, period2: 20 },
+      params: { period: 5 },
     },
     calculate: (data, params) => ({
-      ema1: calculateEMA(data, params.period1),
-      ema2: calculateEMA(data, params.period2),
+      ema1: calculateEMA(data, params.period),
     }),
   },
   BOLL: {

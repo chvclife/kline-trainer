@@ -64,16 +64,6 @@ export default function TrainingPage() {
   const setActiveDrawingTool = useChartStore((s) => s.setActiveDrawingTool);
   const clearDrawings = useChartStore((s) => s.clearDrawings);
 
-  // Extract MA params for canvas overlay
-  const maIndicator = indicators.find((ind) => ind.name === "MA");
-  const maParams: number[] = [];
-  if (maIndicator) {
-    for (let i = 1; i <= 10; i++) {
-      const v = maIndicator.params[`p${i}`];
-      if (v != null && v > 0) maParams.push(v);
-    }
-  }
-
   // Debounced search
   const debounceRef = useCallback(() => {
     let timer: ReturnType<typeof setTimeout> | null = null;
@@ -374,7 +364,7 @@ export default function TrainingPage() {
             activeDrawingTool={activeDrawingTool}
           />
           <div className="chart-area__canvas">
-            <KlineChart maParams={maParams} />
+            <KlineChart />
           </div>
         </div>
       </div>
